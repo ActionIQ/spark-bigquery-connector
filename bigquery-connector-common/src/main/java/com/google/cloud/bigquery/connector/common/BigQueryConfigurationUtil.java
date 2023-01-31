@@ -24,8 +24,10 @@ import com.google.cloud.bigquery.TableId;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Spliterator;
 import java.util.Spliterators;
@@ -44,6 +46,16 @@ public class BigQueryConfigurationUtil {
   public static <T> Stream<T> javaIterToStream(Iterator<T> iter) {
     return StreamSupport.stream(
         Spliterators.spliteratorUnknownSize(iter, Spliterator.ORDERED), false);
+  }
+
+  public static <T> List<T> javaStreamToList(Stream<T> stm) {
+    return javaIterToList(stm.iterator());
+  }
+
+  public static <T> List<T> javaIterToList(Iterator<T> iter) {
+    List<T> list = new ArrayList<>();
+    iter.forEachRemaining(list::add);
+    return list;
   }
 
   public static <T> java.util.Optional<T> googOptionToJava(

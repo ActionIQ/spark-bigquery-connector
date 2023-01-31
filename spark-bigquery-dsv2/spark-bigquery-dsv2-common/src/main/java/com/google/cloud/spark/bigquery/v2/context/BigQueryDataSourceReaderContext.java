@@ -15,6 +15,8 @@
  */
 package com.google.cloud.spark.bigquery.v2.context;
 
+import static com.google.cloud.bigquery.connector.common.BigQueryConfigurationUtil.javaIterToStream;
+
 import com.google.cloud.bigquery.Field;
 import com.google.cloud.bigquery.Schema;
 import com.google.cloud.bigquery.TableDefinition;
@@ -35,11 +37,9 @@ import com.google.cloud.spark.bigquery.SchemaConverters;
 import com.google.cloud.spark.bigquery.SparkBigQueryConfig;
 import com.google.cloud.spark.bigquery.SparkFilterUtils;
 import com.google.cloud.spark.bigquery.direct.BigQueryRDDFactory;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Streams;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -103,8 +103,7 @@ public class BigQueryDataSourceReaderContext {
   // In Spark 3.1 connector, "estimateStatistics" is called before
   // "planBatchInputPartitionContexts" or
   // "planInputPartitionContexts". We will use this to get table statistics in estimateStatistics.
-  private Supplier<ReadSessionResponse> readSessionResponse =
-      Suppliers.memoize(this::createReadSession);
+  private Supplier<ReadSessionResponse> readSessionResponse = () -> createReadSession();
 
   public BigQueryDataSourceReaderContext(
       TableInfo table,
@@ -199,14 +198,13 @@ public class BigQueryDataSourceReaderContext {
       Schema tableSchema =
           SchemaConverters.getSchemaWithPseudoColumns(readSessionResponse.get().getReadTableInfo());
       tempSelectedFields =
-          tableSchema.getFields().stream()
-              .map(Field::getName)
-              .collect(ImmutableList.toImmutableList());
+          ImmutableList.copyOf(tableSchema.getFields().stream().map(Field::getName).iterator());
     }
     ImmutableList<String> partitionSelectedFields = tempSelectedFields;
-    return Streams.stream(
+    return javaIterToStream(
             Iterables.partition(
-                readSession.getStreamsList(), readSessionCreatorConfig.streamsPerPartition()))
+                    readSession.getStreamsList(), readSessionCreatorConfig.streamsPerPartition())
+                .iterator())
         .map(
             streams ->
                 new ArrowInputPartitionContext(
@@ -238,9 +236,7 @@ public class BigQueryDataSourceReaderContext {
       if (selectedFields.isEmpty()) {
         // means select *
         selectedFields =
-            schema.getFields().stream()
-                .map(Field::getName)
-                .collect(ImmutableList.toImmutableList());
+            ImmutableList.copyOf(schema.getFields().stream().map(Field::getName).iterator());
       } else {
         Set<String> requiredColumnSet = ImmutableSet.copyOf(selectedFields);
         schema =
