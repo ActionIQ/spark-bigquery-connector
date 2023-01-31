@@ -15,8 +15,6 @@
  */
 package com.google.cloud.spark.bigquery.write.context;
 
-import static com.google.cloud.bigquery.connector.common.BigQueryConfigurationUtil.javaOptionToGoog;
-
 import com.google.api.gax.retrying.RetrySettings;
 import com.google.cloud.bigquery.TableId;
 import com.google.cloud.bigquery.connector.common.BigQueryClient;
@@ -70,7 +68,7 @@ public class BigQueryDataSourceWriterModule implements Module {
         mode,
         sparkSchema,
         bigqueryDataWriteHelperRetrySettings,
-        javaOptionToGoog(tableConfig.getTraceId()),
+        com.google.common.base.Optional.fromJavaUtil(tableConfig.getTraceId()),
         tableConfig.getEnableModeCheckForSchemaFields(),
         tableConfig.getBigQueryTableLabels()); // needs to be serializable
   }

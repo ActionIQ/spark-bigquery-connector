@@ -30,14 +30,13 @@ import com.google.cloud.bigquery.connector.common.BigQueryUtil;
 import com.google.cloud.bigquery.connector.common.ReadSessionCreator;
 import com.google.cloud.bigquery.connector.common.ReadSessionResponse;
 import com.google.cloud.bigquery.storage.v1.ReadSession;
-import com.google.cloud.bigquery.storage.v1.ReadStream;
 import com.google.cloud.spark.bigquery.SchemaConverters;
 import com.google.cloud.spark.bigquery.SparkBigQueryConfig;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Streams;
 import java.lang.reflect.Constructor;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -141,11 +140,12 @@ public class BigQueryRDDFactory {
     ReadSession readSession = readSessionResponse.getReadSession();
     TableInfo actualTable = readSessionResponse.getReadTableInfo();
 
-    List<BigQueryPartition> partitions = new ArrayList<BigQueryPartition>();
-    int i = 0;
-    for (ReadStream rs : readSession.getStreamsList()) {
-      partitions.add(new BigQueryPartition(rs.getName(), Math.toIntExact(i++)));
-    }
+    List<BigQueryPartition> partitions =
+        Streams.mapWithIndex(
+                readSession.getStreamsList().stream(),
+                (readStream, index) ->
+                    new BigQueryPartition(readStream.getName(), Math.toIntExact(index)))
+            .collect(Collectors.toList());
 
     log.info(
         "Created read session for table '{}': {}",

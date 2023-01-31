@@ -15,8 +15,6 @@
  */
 package com.google.cloud.spark.bigquery.write;
 
-import static com.google.cloud.bigquery.connector.common.BigQueryConfigurationUtil.javaIterToStream;
-
 import com.google.cloud.bigquery.Field;
 import com.google.cloud.bigquery.FormatOptions;
 import com.google.cloud.bigquery.JobInfo;
@@ -31,6 +29,7 @@ import com.google.cloud.spark.bigquery.SparkBigQueryConfig;
 import com.google.cloud.spark.bigquery.SparkBigQueryUtil;
 import com.google.cloud.spark.bigquery.SupportedCustomDataType;
 import com.google.cloud.spark.bigquery.util.HdfsUtils;
+import com.google.common.collect.Streams;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -120,7 +119,7 @@ public class BigQueryWriteHelper {
     String suffix = "." + formatOptions.getType().toLowerCase();
     List<String> sourceUris =
         SparkBigQueryUtil.optimizeLoadUriListForSpark(
-            javaIterToStream(HdfsUtils.toJavaUtilIterator(fs.listFiles(gcsPath, false)))
+            Streams.stream(HdfsUtils.toJavaUtilIterator(fs.listFiles(gcsPath, false)))
                 .map(file -> file.getPath().toString())
                 .filter(path -> path.toLowerCase().endsWith(suffix))
                 .collect(Collectors.toList()));

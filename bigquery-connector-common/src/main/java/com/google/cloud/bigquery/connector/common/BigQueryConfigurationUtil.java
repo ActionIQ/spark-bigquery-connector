@@ -24,16 +24,9 @@ import com.google.cloud.bigquery.TableId;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
-import java.util.Spliterator;
-import java.util.Spliterators;
 import java.util.function.Supplier;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 /** Utilities to read configuration options */
 public class BigQueryConfigurationUtil {
@@ -43,41 +36,13 @@ public class BigQueryConfigurationUtil {
 
   private BigQueryConfigurationUtil() {}
 
-  public static <T> Stream<T> javaIterToStream(Iterator<T> iter) {
-    return StreamSupport.stream(
-        Spliterators.spliteratorUnknownSize(iter, Spliterator.ORDERED), false);
-  }
-
-  public static <T> List<T> javaStreamToList(Stream<T> stm) {
-    return javaIterToList(stm.iterator());
-  }
-
-  public static <T> List<T> javaIterToList(Iterator<T> iter) {
-    List<T> list = new ArrayList<>();
-    iter.forEachRemaining(list::add);
-    return list;
-  }
-
-  public static <T> java.util.Optional<T> googOptionToJava(
-      com.google.common.base.Optional<T> googOpt) {
-    return java.util.Optional.ofNullable(googOpt.orNull());
-  }
-
-  public static <T> com.google.common.base.Optional<T> javaOptionToGoog(
-      java.util.Optional<T> javaOpt) {
-    if (javaOpt == null) {
-      return null;
-    } else {
-      return com.google.common.base.Optional.fromNullable(javaOpt.orElse((T) null));
-    }
-  }
-
   public static com.google.common.base.Supplier<String> defaultBilledProject() {
     return () -> BigQueryOptions.getDefaultInstance().getProjectId();
   }
 
   public static String getRequiredOption(Map<String, String> options, String name) {
-    return googOptionToJava(getOption(options, name, DEFAULT_FALLBACK))
+    return getOption(options, name, DEFAULT_FALLBACK)
+        .toJavaUtil()
         .orElseThrow(() -> new IllegalArgumentException(format("Option %s required.", name)));
   }
 
@@ -93,10 +58,10 @@ public class BigQueryConfigurationUtil {
 
   public static com.google.common.base.Optional<String> getOption(
       Map<String, String> options, String name, Supplier<Optional<String>> fallback) {
-    return javaOptionToGoog(
+    return fromJavaUtil(
         firstPresent(
             java.util.Optional.ofNullable(options.get(name.toLowerCase())),
-            googOptionToJava(fallback.get())));
+            fallback.get().toJavaUtil()));
   }
 
   public static com.google.common.base.Optional<String> getOptionFromMultipleParams(
@@ -142,7 +107,7 @@ public class BigQueryConfigurationUtil {
   }
 
   public static com.google.common.base.Optional fromJavaUtil(java.util.Optional o) {
-    return javaOptionToGoog(o);
+    return com.google.common.base.Optional.fromJavaUtil(o);
   }
 
   /** TableId that does not include partition decorator */
@@ -157,8 +122,8 @@ public class BigQueryConfigurationUtil {
     Optional<String> projectParam = getOption(options, "project").or(fallbackProject);
     return parseTableId(
         tableParam,
-        googOptionToJava(datasetParam),
-        googOptionToJava(projectParam), /* datePartition */
+        datasetParam.toJavaUtil(),
+        projectParam.toJavaUtil(), /* datePartition */
         java.util.Optional.empty());
   }
 
@@ -167,7 +132,7 @@ public class BigQueryConfigurationUtil {
       java.util.Optional<String> fallbackProject,
       java.util.Optional<String> fallbackDataset) {
     return parseSimpleTableId(
-        options, javaOptionToGoog(fallbackProject), javaOptionToGoog(fallbackDataset));
+        options, Optional.fromJavaUtil(fallbackProject), Optional.fromJavaUtil(fallbackDataset));
   }
 
   public static TableId parseSimpleTableId(

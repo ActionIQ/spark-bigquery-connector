@@ -15,8 +15,7 @@
  */
 package org.apache.spark.sql;
 
-import static com.google.cloud.bigquery.connector.common.BigQueryConfigurationUtil.javaIterToStream;
-
+import com.google.common.collect.Streams;
 import java.util.ServiceLoader;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.catalyst.encoders.ExpressionEncoder;
@@ -30,7 +29,7 @@ public abstract class SparkSqlUtils {
     if (instance == null) {
       ServiceLoader<SparkSqlUtils> serviceLoader = ServiceLoader.load(SparkSqlUtils.class);
       instance =
-          javaIterToStream(serviceLoader.iterator())
+          Streams.stream(serviceLoader.iterator())
               .filter(s -> s.supportsScalaVersion(scalaVersion))
               .findFirst()
               .orElseThrow(

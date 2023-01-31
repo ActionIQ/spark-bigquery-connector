@@ -15,8 +15,7 @@
  */
 package com.google.cloud.spark.bigquery;
 
-import static com.google.cloud.bigquery.connector.common.BigQueryConfigurationUtil.googOptionToJava;
-import static com.google.cloud.bigquery.connector.common.BigQueryConfigurationUtil.javaOptionToGoog;
+import static com.google.common.base.Optional.fromJavaUtil;
 
 import com.google.cloud.bigquery.Schema;
 import com.google.cloud.bigquery.connector.common.BigQueryStorageReadRowsTracer;
@@ -41,8 +40,8 @@ public interface ReadRowsResponseToInternalRowIteratorConverter {
         bqSchema,
         columnsInOrder,
         rawAvroSchema,
-        javaOptionToGoog(userProvidedSchema),
-        javaOptionToGoog(bigQueryStorageReadRowsTracer));
+        fromJavaUtil(userProvidedSchema),
+        fromJavaUtil(bigQueryStorageReadRowsTracer));
   }
 
   static ReadRowsResponseToInternalRowIteratorConverter arrow(
@@ -53,8 +52,8 @@ public interface ReadRowsResponseToInternalRowIteratorConverter {
     return new Arrow(
         columnsInOrder,
         arrowSchema,
-        javaOptionToGoog(userProvidedSchema),
-        javaOptionToGoog(bigQueryStorageReadRowsTracer));
+        fromJavaUtil(userProvidedSchema),
+        fromJavaUtil(bigQueryStorageReadRowsTracer));
   }
 
   Iterator<InternalRow> convert(ReadRowsResponse response);
@@ -91,8 +90,8 @@ public interface ReadRowsResponseToInternalRowIteratorConverter {
           columnsInOrder,
           new org.apache.avro.Schema.Parser().parse(rawAvroSchema),
           response.getAvroRows().getSerializedBinaryRows(),
-          googOptionToJava(userProvidedSchema),
-          googOptionToJava(bigQueryStorageReadRowsTracer));
+          userProvidedSchema.toJavaUtil(),
+          bigQueryStorageReadRowsTracer.toJavaUtil());
     }
 
     @Override
@@ -127,8 +126,8 @@ public interface ReadRowsResponseToInternalRowIteratorConverter {
           columnsInOrder,
           arrowSchema,
           response.getArrowRecordBatch().getSerializedRecordBatch(),
-          googOptionToJava(userProvidedSchema),
-          googOptionToJava(bigQueryStorageReadRowsTracer));
+          userProvidedSchema.toJavaUtil(),
+          bigQueryStorageReadRowsTracer.toJavaUtil());
     }
 
     @Override

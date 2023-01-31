@@ -17,7 +17,6 @@ package com.google.cloud.spark.bigquery;
 
 import static com.google.cloud.bigquery.connector.common.BigQueryConfigurationUtil.DEFAULT_FALLBACK;
 import static com.google.cloud.bigquery.connector.common.BigQueryConfigurationUtil.getOptionFromMultipleParams;
-import static com.google.cloud.bigquery.connector.common.BigQueryConfigurationUtil.googOptionToJava;
 
 import com.google.cloud.bigquery.JobInfo;
 import com.google.cloud.bigquery.TableId;
@@ -191,9 +190,8 @@ public class SparkBigQueryUtil {
     // options.get("table") when the "table" option is used, options.get("path") is set when
     // .load("table_name) is used
     Optional<String> tableParam =
-        googOptionToJava(
-            getOptionFromMultipleParams(
-                options, ImmutableList.of("table", "path"), DEFAULT_FALLBACK));
+        getOptionFromMultipleParams(options, ImmutableList.of("table", "path"), DEFAULT_FALLBACK)
+            .toJavaUtil();
     String tableParamStr = tableParam.get().trim().replaceAll("\\s+", " ");
     TableId tableId = BigQueryUtil.parseTableId(tableParamStr);
     return BigQueryUtil.friendlyTableName(tableId);

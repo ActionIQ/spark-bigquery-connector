@@ -15,7 +15,6 @@
  */
 package com.google.cloud.spark.bigquery.write;
 
-import static com.google.cloud.bigquery.connector.common.BigQueryConfigurationUtil.javaIterToList;
 import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyLong;
@@ -30,9 +29,11 @@ import com.google.cloud.spark.bigquery.write.context.DataWriterContext;
 import com.google.cloud.spark.bigquery.write.context.DataWriterContextFactory;
 import com.google.cloud.spark.bigquery.write.context.WriterCommitMessageContext;
 import com.google.common.collect.Iterators;
+import com.google.common.collect.Streams;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.catalyst.expressions.GenericRow;
@@ -88,7 +89,8 @@ public class DataSourceWriterContextPartitionHandlerTest {
 
     verify(dataWriterContext, atLeastOnce()).write(any(InternalRow.class));
     verify(dataWriterContext).abort();
-    List<WriterCommitMessageContext> result = javaIterToList(resultIterator);
+    List<WriterCommitMessageContext> result =
+        Streams.stream(resultIterator).collect(Collectors.toList());
     assertThat(resultIterator.hasNext()).isFalse();
   }
 }

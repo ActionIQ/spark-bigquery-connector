@@ -302,7 +302,7 @@ public class BigQueryClient {
     Iterable<Table> allTables = bigQuery.listTables(datasetId).iterateAll();
     return StreamSupport.stream(allTables.spliterator(), false)
         .filter(table -> allowedTypes.contains(table.getDefinition().getType()))
-        .collect(Collectors.toList());
+        .collect(ImmutableList.toImmutableList());
   }
 
   TableId createDestinationTable(

@@ -15,9 +15,8 @@
  */
 package com.google.cloud.spark.bigquery;
 
-import static com.google.cloud.bigquery.connector.common.BigQueryConfigurationUtil.googOptionToJava;
-import static com.google.cloud.bigquery.connector.common.BigQueryConfigurationUtil.javaOptionToGoog;
 import static com.google.cloud.bigquery.connector.common.BigQueryUtil.firstPresent;
+import static com.google.common.base.Optional.fromJavaUtil;
 import static com.google.common.base.Optional.fromNullable;
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -155,10 +154,10 @@ public class SparkBigQueryProxyAndHttpConfig implements BigQueryProxyConfig, Ser
       Configuration hadoopConfiguration,
       String bqOption,
       String gcsProperty) {
-    return javaOptionToGoog(
+    return fromJavaUtil(
         firstPresent(
-            googOptionToJava(getFirstOrSecondOption(options, globalOptions, bqOption)),
-            googOptionToJava(fromNullable(hadoopConfiguration.get(gcsProperty)))));
+            getFirstOrSecondOption(options, globalOptions, bqOption).toJavaUtil(),
+            fromNullable(hadoopConfiguration.get(gcsProperty)).toJavaUtil()));
   }
 
   private static com.google.common.base.Optional<String> getFirstOrSecondOption(
@@ -197,27 +196,27 @@ public class SparkBigQueryProxyAndHttpConfig implements BigQueryProxyConfig, Ser
   }
 
   public Optional<URI> getProxyUri() {
-    return googOptionToJava(proxyUri);
+    return proxyUri.toJavaUtil();
   }
 
   public Optional<String> getProxyUsername() {
-    return googOptionToJava(proxyUsername);
+    return proxyUsername.toJavaUtil();
   }
 
   public Optional<String> getProxyPassword() {
-    return googOptionToJava(proxyPassword);
+    return proxyPassword.toJavaUtil();
   }
 
   Optional<Integer> getHttpMaxRetry() {
-    return googOptionToJava(httpMaxRetry);
+    return httpMaxRetry.toJavaUtil();
   }
 
   Optional<Integer> getHttpConnectTimeout() {
-    return googOptionToJava(httpConnectTimeout);
+    return httpConnectTimeout.toJavaUtil();
   }
 
   Optional<Integer> getHttpReadTimeout() {
-    return googOptionToJava(httpReadTimeout);
+    return httpReadTimeout.toJavaUtil();
   }
 
   @Override
