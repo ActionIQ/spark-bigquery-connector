@@ -73,7 +73,7 @@
         <zstd.version>1.4.9-1</zstd.version>
         <deploy.skip>false</deploy.skip>
         <nexus.remote.skip>false</nexus.remote.skip>
-        <shade.skip>false</shade.skip>
+        <shade.skip>true</shade.skip>
         <!-- checkstyle
         <checkstyle.header.file>${reactor.project.basedir}/java.header</checkstyle.header.file>
         -->
