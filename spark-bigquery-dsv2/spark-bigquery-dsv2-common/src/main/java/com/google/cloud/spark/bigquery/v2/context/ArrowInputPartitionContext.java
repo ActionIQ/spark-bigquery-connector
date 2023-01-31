@@ -15,8 +15,8 @@
  */
 package com.google.cloud.spark.bigquery.v2.context;
 
-import static com.google.cloud.bigquery.connector.common.BigQueryConfigurationUtil.javaOptionToGoog;
 import static com.google.cloud.bigquery.connector.common.BigQueryConfigurationUtil.googOptionToJava;
+import static com.google.cloud.bigquery.connector.common.BigQueryConfigurationUtil.javaOptionToGoog;
 
 import com.google.cloud.bigquery.connector.common.BigQueryClientFactory;
 import com.google.cloud.bigquery.connector.common.BigQueryStorageReadRowsTracer;

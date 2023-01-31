@@ -15,8 +15,11 @@
  */
 package org.apache.spark.sql;
 
-import com.google.common.collect.Streams;
 import java.util.ServiceLoader;
+import java.util.Spliterator;
+import java.util.Spliterators;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.catalyst.encoders.ExpressionEncoder;
 import org.apache.spark.sql.types.StructType;
@@ -28,8 +31,12 @@ public abstract class SparkSqlUtils {
     String scalaVersion = scala.util.Properties.versionNumberString();
     if (instance == null) {
       ServiceLoader<SparkSqlUtils> serviceLoader = ServiceLoader.load(SparkSqlUtils.class);
+      Stream<SparkSqlUtils> spUtils =
+          StreamSupport.stream(
+              Spliterators.spliteratorUnknownSize(serviceLoader.iterator(), Spliterator.ORDERED),
+              false);
       instance =
-          Streams.stream(serviceLoader.iterator())
+          spUtils
               .filter(s -> s.supportsScalaVersion(scalaVersion))
               .findFirst()
               .orElseThrow(

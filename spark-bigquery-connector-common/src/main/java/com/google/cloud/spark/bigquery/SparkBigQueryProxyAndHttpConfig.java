@@ -15,9 +15,9 @@
  */
 package com.google.cloud.spark.bigquery;
 
-import static com.google.cloud.bigquery.connector.common.BigQueryUtil.firstPresent;
-import static com.google.cloud.bigquery.connector.common.BigQueryConfigurationUtil.javaOptionToGoog;
 import static com.google.cloud.bigquery.connector.common.BigQueryConfigurationUtil.googOptionToJava;
+import static com.google.cloud.bigquery.connector.common.BigQueryConfigurationUtil.javaOptionToGoog;
+import static com.google.cloud.bigquery.connector.common.BigQueryUtil.firstPresent;
 import static com.google.common.base.Optional.fromNullable;
 import static com.google.common.base.Preconditions.checkArgument;
 

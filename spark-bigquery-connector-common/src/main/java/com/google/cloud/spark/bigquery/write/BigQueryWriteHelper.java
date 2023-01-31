@@ -29,7 +29,6 @@ import com.google.cloud.spark.bigquery.SparkBigQueryConfig;
 import com.google.cloud.spark.bigquery.SparkBigQueryUtil;
 import com.google.cloud.spark.bigquery.SupportedCustomDataType;
 import com.google.cloud.spark.bigquery.util.HdfsUtils;
-import com.google.common.collect.Streams;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -114,7 +113,8 @@ public class BigQueryWriteHelper {
   }
 
   private static <T> Stream<T> guavaStreamFromIter(java.util.Iterator<T> iterator) {
-    return java.util.stream.StreamSupport.stream(java.util.Spliterators.spliteratorUnknownSize(iterator, 0), false);
+    return java.util.stream.StreamSupport.stream(
+        java.util.Spliterators.spliteratorUnknownSize(iterator, 0), false);
   }
 
   void loadDataToBigQuery() throws IOException {

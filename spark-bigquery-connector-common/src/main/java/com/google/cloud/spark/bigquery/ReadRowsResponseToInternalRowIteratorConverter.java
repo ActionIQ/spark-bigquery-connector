@@ -15,8 +15,8 @@
  */
 package com.google.cloud.spark.bigquery;
 
-import static com.google.cloud.bigquery.connector.common.BigQueryConfigurationUtil.javaOptionToGoog;
 import static com.google.cloud.bigquery.connector.common.BigQueryConfigurationUtil.googOptionToJava;
+import static com.google.cloud.bigquery.connector.common.BigQueryConfigurationUtil.javaOptionToGoog;
 
 import com.google.cloud.bigquery.Schema;
 import com.google.cloud.bigquery.connector.common.BigQueryStorageReadRowsTracer;
@@ -91,8 +91,8 @@ public interface ReadRowsResponseToInternalRowIteratorConverter {
           columnsInOrder,
           new org.apache.avro.Schema.Parser().parse(rawAvroSchema),
           response.getAvroRows().getSerializedBinaryRows(),
-          userProvidedSchema.toJavaUtil(),
-          bigQueryStorageReadRowsTracer.toJavaUtil());
+          googOptionToJava(userProvidedSchema),
+          googOptionToJava(bigQueryStorageReadRowsTracer));
     }
 
     @Override
@@ -127,8 +127,8 @@ public interface ReadRowsResponseToInternalRowIteratorConverter {
           columnsInOrder,
           arrowSchema,
           response.getArrowRecordBatch().getSerializedRecordBatch(),
-          userProvidedSchema.toJavaUtil(),
-          bigQueryStorageReadRowsTracer.toJavaUtil());
+          googOptionToJava(userProvidedSchema),
+          googOptionToJava(bigQueryStorageReadRowsTracer));
     }
 
     @Override

@@ -23,8 +23,8 @@ import static com.google.cloud.bigquery.connector.common.BigQueryConfigurationUt
 import static com.google.cloud.bigquery.connector.common.BigQueryConfigurationUtil.getOption;
 import static com.google.cloud.bigquery.connector.common.BigQueryConfigurationUtil.getOptionFromMultipleParams;
 import static com.google.cloud.bigquery.connector.common.BigQueryConfigurationUtil.getRequiredOption;
-import static com.google.cloud.bigquery.connector.common.BigQueryConfigurationUtil.javaOptionToGoog;
 import static com.google.cloud.bigquery.connector.common.BigQueryConfigurationUtil.googOptionToJava;
+import static com.google.cloud.bigquery.connector.common.BigQueryConfigurationUtil.javaOptionToGoog;
 import static com.google.cloud.bigquery.connector.common.BigQueryUtil.firstPresent;
 import static com.google.cloud.bigquery.connector.common.BigQueryUtil.parseTableId;
 import static com.google.cloud.spark.bigquery.SparkBigQueryUtil.scalaMapToJavaMap;
@@ -242,20 +242,22 @@ public class SparkBigQueryConfig
         materializationConfiguration.getMaterializationExpirationTimeInMinutes();
     // get the table details
     com.google.common.base.Optional<String> fallbackDataset = config.materializationDataset;
-    Optional<String> fallbackProject = googOptionToJava(
-        com.google.common.base.Optional.fromNullable(
-            hadoopConfiguration.get(GCS_CONFIG_PROJECT_ID_PROPERTY))
-    );
-    Optional<String> tableParam = googOptionToJava(
-        getOptionFromMultipleParams(options, ImmutableList.of("table", "path"), DEFAULT_FALLBACK)
-    );
-    Optional<String> datasetParam = googOptionToJava(
-        getOption(options, "dataset").or(fallbackDataset));
+    Optional<String> fallbackProject =
+        googOptionToJava(
+            com.google.common.base.Optional.fromNullable(
+                hadoopConfiguration.get(GCS_CONFIG_PROJECT_ID_PROPERTY)));
+    Optional<String> tableParam =
+        googOptionToJava(
+            getOptionFromMultipleParams(
+                options, ImmutableList.of("table", "path"), DEFAULT_FALLBACK));
+    Optional<String> datasetParam =
+        googOptionToJava(getOption(options, "dataset").or(fallbackDataset));
     Optional<String> projectParam =
         firstPresent(googOptionToJava(getOption(options, "project")), fallbackProject);
     config.partitionType =
         getOption(options, "partitionType").transform(TimePartitioning.Type::valueOf);
-    Optional<String> datePartitionParam = googOptionToJava(getOption(options, DATE_PARTITION_PARAM));
+    Optional<String> datePartitionParam =
+        googOptionToJava(getOption(options, DATE_PARTITION_PARAM));
     datePartitionParam.ifPresent(
         date -> validateDateFormat(date, config.getPartitionTypeOrDefault(), DATE_PARTITION_PARAM));
     // checking for query
@@ -291,11 +293,9 @@ public class SparkBigQueryConfig
         javaOptionToGoog(
             firstPresent(
                 googOptionToJava(getAnyOption(globalOptions, options, "credentialsFile")),
-                googOptionToJava(com.google.common.base.Optional.fromNullable(
-                  hadoopConfiguration.get(GCS_CONFIG_CREDENTIALS_FILE_PROPERTY)
-                ))
-            )
-        );
+                googOptionToJava(
+                    com.google.common.base.Optional.fromNullable(
+                        hadoopConfiguration.get(GCS_CONFIG_CREDENTIALS_FILE_PROPERTY)))));
     config.accessToken = getAnyOption(globalOptions, options, "gcpAccessToken");
     config.filter = getOption(options, "filter");
     config.schema = javaOptionToGoog(schema);
@@ -471,11 +471,13 @@ public class SparkBigQueryConfig
 
     String lowerCasePrefix = labelPrefix.toLowerCase(Locale.ROOT);
 
-    ImmutableMap<String, String> allOptions =
-        ImmutableMap.<String, String>builder() //
-            .putAll(globalOptions) //
-            .putAll(options) //
-            .buildKeepingLast();
+    Map<String, String> allOptions = new HashMap<String, String>();
+    for (Map.Entry<String, String> entry : globalOptions.entrySet()) {
+      allOptions.put(entry.getKey(), entry.getValue());
+    }
+    for (Map.Entry<String, String> entry : options.entrySet()) {
+      allOptions.put(entry.getKey(), entry.getValue());
+    }
 
     ImmutableMap.Builder<String, String> result = ImmutableMap.<String, String>builder();
     for (Map.Entry<String, String> entry : allOptions.entrySet()) {
@@ -576,7 +578,7 @@ public class SparkBigQueryConfig
 
   @Override
   public Optional<String> getAccessTokenProviderFQCN() {
-    return accessTokenProviderFQCN.toJavaUtil();
+    return googOptionToJava(accessTokenProviderFQCN);
   }
 
   @Override
@@ -760,7 +762,7 @@ public class SparkBigQueryConfig
 
   @Override
   public Optional<Long> getCreateReadSessionTimeoutInSeconds() {
-    return createReadSessionTimeoutInSeconds.toJavaUtil();
+    return googOptionToJava(createReadSessionTimeoutInSeconds);
   }
 
   @Override

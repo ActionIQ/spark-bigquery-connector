@@ -16,7 +16,6 @@
 package com.google.cloud.spark.bigquery.write.context;
 
 import static com.google.cloud.bigquery.connector.common.BigQueryConfigurationUtil.javaOptionToGoog;
-import static com.google.cloud.bigquery.connector.common.BigQueryConfigurationUtil.googOptionToJava;
 
 import com.google.api.gax.retrying.RetrySettings;
 import com.google.cloud.bigquery.TableId;
