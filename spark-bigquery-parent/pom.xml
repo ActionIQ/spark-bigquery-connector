@@ -64,10 +64,10 @@
         <google-cloud-storage.version>2.9.3</google-cloud-storage.version>
         <google-truth.version>1.1.3</google-truth.version>
         <grpc.version>1.47.0</grpc.version>
-        <!-- TODO: once AIQ is upgraded, set this back to 31.1-jre -->
-        <!-- <guava.version>20.0</guava.version> -->
-        <!-- TODO: once AIQ is upgraded, set this back to 2.13.3 -->
-        <!-- <jackson.version>2.9.10</jackson.version> -->
+<!--
+        <guava.version>20.0</guava.version>
+        <jackson.version>2.9.10</jackson.version>
+-->
         <guava.version>31.1-jre</guava.version>
         <jackson.version>2.13.3</jackson.version>
         <netty.version>4.1.79.Final</netty.version>
