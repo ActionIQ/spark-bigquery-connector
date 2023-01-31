@@ -35,36 +35,26 @@ public interface ReadRowsResponseToInternalRowIteratorConverter {
       final com.google.cloud.bigquery.Schema bqSchema,
       final List<String> columnsInOrder,
       final String rawAvroSchema,
-<<<<<<< HEAD
       final Optional<StructType> userProvidedSchema,
       final Optional<BigQueryStorageReadRowsTracer> bigQueryStorageReadRowsTracer) {
     return new Avro(
         bqSchema,
         columnsInOrder,
         rawAvroSchema,
-        fromJavaUtil(userProvidedSchema),
-        fromJavaUtil(bigQueryStorageReadRowsTracer));
-=======
-      final Optional<StructType> userProvidedSchema) {
-    return new Avro(bqSchema, columnsInOrder, rawAvroSchema, javaOptionToGoog(userProvidedSchema));
->>>>>>> 6fa7b4d (Fix)
+        javaOptionToGoog(userProvidedSchema),
+        javaOptionToGoog(bigQueryStorageReadRowsTracer));
   }
 
   static ReadRowsResponseToInternalRowIteratorConverter arrow(
       final List<String> columnsInOrder,
       final ByteString arrowSchema,
-<<<<<<< HEAD
       final Optional<StructType> userProvidedSchema,
       final Optional<BigQueryStorageReadRowsTracer> bigQueryStorageReadRowsTracer) {
     return new Arrow(
         columnsInOrder,
         arrowSchema,
-        fromJavaUtil(userProvidedSchema),
-        fromJavaUtil(bigQueryStorageReadRowsTracer));
-=======
-      final Optional<StructType> userProvidedSchema) {
-    return new Arrow(columnsInOrder, arrowSchema, javaOptionToGoog(userProvidedSchema));
->>>>>>> 6fa7b4d (Fix)
+        javaOptionToGoog(userProvidedSchema),
+        javaOptionToGoog(bigQueryStorageReadRowsTracer));
   }
 
   Iterator<InternalRow> convert(ReadRowsResponse response);
@@ -101,7 +91,6 @@ public interface ReadRowsResponseToInternalRowIteratorConverter {
           columnsInOrder,
           new org.apache.avro.Schema.Parser().parse(rawAvroSchema),
           response.getAvroRows().getSerializedBinaryRows(),
-<<<<<<< HEAD
           userProvidedSchema.toJavaUtil(),
           bigQueryStorageReadRowsTracer.toJavaUtil());
     }
@@ -109,9 +98,6 @@ public interface ReadRowsResponseToInternalRowIteratorConverter {
     @Override
     public int getBatchSizeInBytes(ReadRowsResponse response) {
       return response.getAvroRows().getSerializedBinaryRows().size();
-=======
-          googOptionToJava(userProvidedSchema));
->>>>>>> 6fa7b4d (Fix)
     }
   }
 
@@ -141,7 +127,6 @@ public interface ReadRowsResponseToInternalRowIteratorConverter {
           columnsInOrder,
           arrowSchema,
           response.getArrowRecordBatch().getSerializedRecordBatch(),
-<<<<<<< HEAD
           userProvidedSchema.toJavaUtil(),
           bigQueryStorageReadRowsTracer.toJavaUtil());
     }
@@ -149,9 +134,6 @@ public interface ReadRowsResponseToInternalRowIteratorConverter {
     @Override
     public int getBatchSizeInBytes(ReadRowsResponse response) {
       return response.getArrowRecordBatch().getSerializedRecordBatch().size();
-=======
-          googOptionToJava(userProvidedSchema));
->>>>>>> 6fa7b4d (Fix)
     }
   }
 }

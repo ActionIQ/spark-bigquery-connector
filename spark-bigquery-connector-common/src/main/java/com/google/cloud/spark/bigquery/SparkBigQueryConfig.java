@@ -533,16 +533,10 @@ public class SparkBigQueryConfig
   public Credentials createCredentials() {
 
     return new BigQueryCredentialsSupplier(
-<<<<<<< HEAD
-            accessTokenProviderFQCN.toJavaUtil(),
-            accessToken.toJavaUtil(),
-            credentialsKey.toJavaUtil(),
-            credentialsFile.toJavaUtil(),
-=======
+            googOptionToJava(accessTokenProviderFQCN),
             googOptionToJava(accessToken),
             googOptionToJava(credentialsKey),
             googOptionToJava(credentialsFile),
->>>>>>> 6fa7b4d (Fix)
             sparkBigQueryProxyAndHttpConfig.getProxyUri(),
             sparkBigQueryProxyAndHttpConfig.getProxyUsername(),
             sparkBigQueryProxyAndHttpConfig.getProxyPassword())
@@ -750,18 +744,13 @@ public class SparkBigQueryConfig
   }
 
   @Override
-<<<<<<< HEAD
   public Optional<String> getBigQueryStorageGrpcEndpoint() {
-    return bigQueryStorageGrpcEndpoint.toJavaUtil();
+    return googOptionToJava(bigQueryStorageGrpcEndpoint);
   }
 
   @Override
   public Optional<String> getBigQueryHttpEndpoint() {
-    return bigQueryHttpEndpoint.toJavaUtil();
-=======
-  public Optional<String> getEndpoint() {
-    return googOptionToJava(storageReadEndpoint);
->>>>>>> 6fa7b4d (Fix)
+    return googOptionToJava(bigQueryHttpEndpoint);
   }
 
   @Override
@@ -823,15 +812,10 @@ public class SparkBigQueryConfig
         .setViewEnabledParamName(VIEWS_ENABLED_OPTION)
         .setDefaultParallelism(defaultParallelism)
         .setMaxParallelism(getMaxParallelism())
-<<<<<<< HEAD
         .setPreferredMinParallelism(getPreferredMinParallelism())
-        .setRequestEncodedBase(encodedCreateReadSessionRequest.toJavaUtil())
-        .setBigQueryStorageGrpcEndpoint(bigQueryStorageGrpcEndpoint.toJavaUtil())
-        .setBigQueryHttpEndpoint(bigQueryHttpEndpoint.toJavaUtil())
-=======
         .setRequestEncodedBase(googOptionToJava(encodedCreateReadSessionRequest))
-        .setEndpoint(googOptionToJava(storageReadEndpoint))
->>>>>>> 6fa7b4d (Fix)
+        .setBigQueryStorageGrpcEndpoint(googOptionToJava(bigQueryStorageGrpcEndpoint))
+        .setBigQueryHttpEndpoint(googOptionToJava(bigQueryHttpEndpoint))
         .setBackgroundParsingThreads(numBackgroundThreadsPerStream)
         .setPushAllFilters(pushAllFilters)
         .setPrebufferReadRowsResponses(numPrebufferReadRowsResponses)
@@ -929,7 +913,7 @@ public class SparkBigQueryConfig
     }
 
     static boolean isSpark24OrAbove(String sparkVersion) {
-      return sparkVersion.compareTo("2.4") > 0;
+      return sparkVersion.compareTo("2.4") > 0 || sparkVersion.compareTo("2-4") > 0;
     }
 
     // could not load the spark-avro data source
