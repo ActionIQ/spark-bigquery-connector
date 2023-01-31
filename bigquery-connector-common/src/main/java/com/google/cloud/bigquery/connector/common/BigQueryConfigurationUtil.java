@@ -25,8 +25,13 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Spliterator;
+import java.util.Spliterators;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 /** Utilities to read configuration options */
 public class BigQueryConfigurationUtil {
@@ -35,6 +40,11 @@ public class BigQueryConfigurationUtil {
       () -> empty();
 
   private BigQueryConfigurationUtil() {}
+
+  public static <T> Stream<T> javaIterToStream(Iterator<T> iter) {
+    return StreamSupport.stream(
+        Spliterators.spliteratorUnknownSize(iter, Spliterator.ORDERED), false);
+  }
 
   public static <T> java.util.Optional<T> googOptionToJava(
       com.google.common.base.Optional<T> googOpt) {

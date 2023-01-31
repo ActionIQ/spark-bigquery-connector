@@ -15,10 +15,10 @@
  */
 package com.google.cloud.spark.bigquery.util;
 
+import static com.google.cloud.bigquery.connector.common.BigQueryConfigurationUtil.javaIterToStream;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.collect.Iterators;
-import com.google.common.collect.Streams;
 import java.nio.file.Files;
 import java.util.Iterator;
 import java.util.List;
@@ -57,7 +57,7 @@ public class HdfsUtilsTest {
     // fresh instance
     it = HdfsUtils.toJavaUtilIterator(fs.listFiles(path, false));
     List<LocatedFileStatus> textFiles =
-        Streams.stream(it)
+        javaIterToStream(it)
             .filter(f -> f.getPath().getName().endsWith(".txt"))
             .collect(Collectors.toList());
     assertThat(textFiles).hasSize(1);

@@ -29,7 +29,6 @@ import com.google.cloud.spark.bigquery.write.context.DataWriterContext;
 import com.google.cloud.spark.bigquery.write.context.DataWriterContextFactory;
 import com.google.cloud.spark.bigquery.write.context.WriterCommitMessageContext;
 import com.google.common.collect.Iterators;
-import com.google.common.collect.Streams;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
