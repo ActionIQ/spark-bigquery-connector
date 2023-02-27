@@ -39,15 +39,17 @@ public class InjectorFactory {
       Map<String, String> options,
       boolean tableIsMandatory) {
     Map<String, String> customDefaults = ImmutableMap.of();
-    return Guice.createInjector(
-        new BigQueryClientModule(),
-        new SparkBigQueryConnectorModule(
-            spark,
-            options,
-            customDefaults,
-            Optional.ofNullable(schema),
-            DataSourceVersion.V2,
-            tableIsMandatory,
-            Optional.empty()));
+    Iterable<com.google.inject.Module> modules =
+        java.util.Arrays.asList(
+            new BigQueryClientModule(),
+            new SparkBigQueryConnectorModule(
+                spark,
+                options,
+                customDefaults,
+                Optional.ofNullable(schema),
+                DataSourceVersion.V2,
+                tableIsMandatory,
+                Optional.empty()));
+    return Guice.createInjector(modules);
   }
 }
