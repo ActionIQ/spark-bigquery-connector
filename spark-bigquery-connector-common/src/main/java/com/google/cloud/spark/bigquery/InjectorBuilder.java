@@ -70,10 +70,17 @@ public class InjectorBuilder {
   }
 
   public Injector build() {
-    Iterable<com.google.inject.Module> modules = java.util.Arrays.asList(
+    Iterable<com.google.inject.Module> modules =
+        java.util.Arrays.asList(
             new BigQueryClientModule(),
             new SparkBigQueryConnectorModule(
-            spark, options, customDefaults, schema, dataSourceVersion, tableIsMandatory, config));
+                spark,
+                options,
+                customDefaults,
+                schema,
+                dataSourceVersion,
+                tableIsMandatory,
+                config));
     return Guice.createInjector(modules);
   }
 }
