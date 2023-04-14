@@ -683,7 +683,7 @@ public class BigQueryClient {
     }
 
     TableInfo createTableFromQuery() {
-      log.debug("destinationTable is %s", destinationTable);
+      log.debug("destinationTable is {}", destinationTable.toString());
       JobInfo jobInfo =
           JobInfo.of(
               jobConfigurationFactory
@@ -691,18 +691,23 @@ public class BigQueryClient {
                   .setDestinationTable(destinationTable)
                   .build());
 
-      log.debug("running query %s", jobInfo);
+      log.debug("running query {}", jobInfo.toString());
       Job job = waitForJob(bigQueryClient.create(jobInfo));
-      log.debug("job has finished. %s", job);
+      log.debug("job has finished {}", job.toString());
       if (job.getStatus().getError() != null) {
         throw BigQueryUtil.convertToBigQueryException(job.getStatus().getError());
       }
-      // add expiration time to the table
+      // add expiration time and labels to the table
       TableInfo createdTable = bigQueryClient.getTable(destinationTable);
       long expirationTime =
           createdTable.getCreationTime() + TimeUnit.MINUTES.toMillis(expirationTimeInMinutes);
       Table updatedTable =
-          bigQueryClient.update(createdTable.toBuilder().setExpirationTime(expirationTime).build());
+          bigQueryClient.update(
+              createdTable
+                  .toBuilder()
+                  .setExpirationTime(expirationTime)
+                  .setLabels(additionalQueryJobLabels)
+                  .build());
       return updatedTable;
     }
 
