@@ -960,7 +960,7 @@ public class SparkBigQueryConfig
     }
 
     static boolean isSpark24OrAbove(String sparkVersion) {
-      return sparkVersion.compareTo("2.4") > 0;
+      return sparkVersion.compareTo("2.4") > 0 || sparkVersion.compareTo("2-4") > 0;
     }
 
     // could not load the spark-avro data source

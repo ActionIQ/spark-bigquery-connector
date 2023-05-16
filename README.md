@@ -1284,3 +1284,31 @@ You can set the following in the hadoop configuration as well.
 If the same parameter is set at multiple places the order of priority is as follows:
 
 option("key", "value") > spark.conf > hadoop configuration
+
+## AIQ DEV
+
+# Prereqs
+The user/password for Artifactory should come from ~/.m2/settings.xml, which was created by the AIQ laptop script.
+
+# Version
+Bump `revision` in `spark-bigquery-parent/pom.xml` to the next `-aiq#` version
+
+# Build
+This places artifacts in `~/.m2/repository/`
+```
+./mvnw clean install -DskipTests
+```
+
+# Tests
+Full tests dont work, they require configuring GCP settings, so just make sure projects
+we care about are passing. Or if you are making a change, confirm the same tests fail with
+and without the change.
+```
+./mvnw test -fn
+```
+
+# Deploy
+To deploy to AIQ artifactory https://actioniq.jfrog.io/artifactory/aiq-sbt-local
+```
+./mvnw deploy -DskipTests
+```

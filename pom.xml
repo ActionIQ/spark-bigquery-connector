@@ -215,7 +215,7 @@
     <profile>
       <id>dsv2_3.3</id>
       <activation>
-        <activeByDefault>false</activeByDefault>
+        <activeByDefault>true</activeByDefault>
       </activation>
       <modules>
         <module>spark-bigquery-dsv2/spark-bigquery-dsv2-common</module>
