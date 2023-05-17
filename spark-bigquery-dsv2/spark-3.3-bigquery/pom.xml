@@ -15,6 +15,7 @@
   <properties>
     <spark.version>3.3.0</spark.version>
     <shade.skip>false</shade.skip>
+    <deploy.skip>false</deploy.skip>
   </properties>
   <licenses>
     <license>
