@@ -1290,25 +1290,34 @@ option("key", "value") > spark.conf > hadoop configuration
 # Prereqs
 The user/password for Artifactory should come from ~/.m2/settings.xml, which was created by the AIQ laptop script.
 
+Download / create a JSON file containing real GCP credentials
+```
+export GOOGLE_APPLICATION_CREDENTIALS=<path to json file>
+```
+
 # Version
 Bump `revision` in `spark-bigquery-parent/pom.xml` to the next `-aiq#` version
 
 # Build
 This places artifacts in `~/.m2/repository/`
 ```
-./mvnw clean install -DskipTests
+./mvnw clean install
 ```
 
 # Tests
-Full tests dont work, they require configuring GCP settings, so just make sure projects
-we care about are passing. Or if you are making a change, confirm the same tests fail with
-and without the change.
+Run all tests except acceptance test and integration tests
 ```
 ./mvnw test -fn
+```
+
+Acceptance Tests and Integration Tests need additional GCP settings
+```
+./mvnw integration-test -P acceptance
+./mvnw integration-test -P integration
 ```
 
 # Deploy
 To deploy to AIQ artifactory https://actioniq.jfrog.io/artifactory/aiq-sbt-local
 ```
-./mvnw deploy -DskipTests
+./mvnw deploy
 ```
