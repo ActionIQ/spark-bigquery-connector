@@ -22,7 +22,16 @@ class Spark33PlanFactory extends SparkPlanFactory {
   /**
    * Generate SparkPlan from the output and RDD of the translated query
    */
-  override def createBigQueryPlan(queryRoot: BigQuerySQLQuery, bigQueryRDDFactory: BigQueryRDDFactory): Option[SparkPlan] = {
-    Some(Spark33BigQueryPushdownPlan(queryRoot.output, bigQueryRDDFactory.buildScanFromSQL(queryRoot.getStatement().toString)))
+  override def createBigQueryPlan(
+    queryRoot: BigQuerySQLQuery, bigQueryRDDFactory: BigQueryRDDFactory
+  ): Option[SparkPlan] = {
+    val sqlStr = queryRoot.getStatement().toString
+    Some(
+      Spark33BigQueryPushdownPlan(
+        queryRoot.output,
+        bigQueryRDDFactory.buildScanFromSQL(sqlStr),
+        sqlStr
+      )
+    )
   }
 }
