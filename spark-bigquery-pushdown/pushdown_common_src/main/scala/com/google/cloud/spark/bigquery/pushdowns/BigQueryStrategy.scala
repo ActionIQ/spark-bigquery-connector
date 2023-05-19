@@ -44,6 +44,7 @@ abstract class BigQueryStrategy(expressionConverter: SparkExpressionConverter, e
     }
 
     try {
+      logDebug(s"Trying Query pushdown for plan ${plan}")
       generateSparkPlanFromLogicalPlan(plan)
     } catch {
       // We catch all exceptions here (including BigQueryPushdownUnsupportedException)

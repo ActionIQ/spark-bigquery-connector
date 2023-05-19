@@ -38,18 +38,18 @@
 
     <distributionManagement>
         <snapshotRepository>
-            <id>ossrh</id>
-            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+            <id>aiq-snapshots-artifactory</id>
+            <url>https://actioniq.jfrog.io/artifactory/aiq-sbt-local</url>
         </snapshotRepository>
         <repository>
-            <id>ossrh</id>
-            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+            <id>aiq-releases-artifactory</id>
+            <url>https://actioniq.jfrog.io/artifactory/aiq-sbt-local</url>
         </repository>
     </distributionManagement>
 
     <properties>
         <gpg.skip>true</gpg.skip>
-        <revision>0.0.1-SNAPSHOT</revision>
+        <revision>0.30.0-aiq3</revision>
 
         <avro.version>1.11.1</avro.version>
         <arrow.version>11.0.0</arrow.version>
@@ -66,9 +66,12 @@
         <paranamer.version>2.8</paranamer.version>
         <protobuf.version>3.22.2</protobuf.version>
         <zstd.version>1.4.9-1</zstd.version>
-        <deploy.skip>true</deploy.skip>
+        <deploy.skip>false</deploy.skip>
         <nexus.remote.skip>false</nexus.remote.skip>
         <shade.skip>true</shade.skip>
+        <argLine>
+            --add-opens=java.base/sun.nio.ch=ALL-UNNAMED
+        </argLine>
         <!-- checkstyle
         <checkstyle.header.file>${reactor.project.basedir}/java.header</checkstyle.header.file>
         -->
@@ -367,8 +370,8 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.11.0</version>
                 <configuration>
-                    <source>1.8</source>
-                    <target>1.8</target>
+                    <source>17</source>
+                    <target>17</target>
                 </configuration>
             </plugin>
             <plugin>

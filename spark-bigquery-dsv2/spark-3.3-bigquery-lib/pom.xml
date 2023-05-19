@@ -13,7 +13,7 @@
   <version>${revision}</version>
   <name>Connector code for BigQuery DataSource v2 for Spark 3.3</name>
   <properties>
-    <spark.version>3.3.0</spark.version>
+    <spark.version>3.3.2</spark.version>
     <shade.skip>true</shade.skip>
   </properties>
   <licenses>
@@ -31,7 +31,7 @@
     </dependency>
     <dependency>
       <groupId>org.apache.spark</groupId>
-      <artifactId>spark-avro_2.13</artifactId>
+      <artifactId>spark-avro_2.12</artifactId>
       <version>${spark.version}</version>
       <scope>test</scope>
     </dependency>

@@ -14,12 +14,13 @@
 
   <properties>
     <scala.binary.version>2.12</scala.binary.version>
-    <spark.version>3.1.0</spark.version>
+    <scala.patch.version>15</scala.patch.version>
+    <spark.version>3.3.2</spark.version>
   </properties>
 
   <build>
     <plugins>
-      <!-- make sure we don't have any _2.10 or _2.11 dependencies when building
+      <!-- make sure we don't have any _2.10 or _2.11 or _2.13 dependencies when building
       for Scala 2.12 -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -37,6 +38,7 @@
                   <excludes combine.children="append">
                     <exclude>*:*_2.10</exclude>
                     <exclude>*:*_2.11</exclude>
+                    <exclude>*:*_2.13</exclude>
                   </excludes>
                 </bannedDependencies>
               </rules>

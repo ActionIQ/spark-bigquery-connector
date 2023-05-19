@@ -16,6 +16,7 @@
   <packaging>pom</packaging>
   <properties>
     <scala.binary.version>2.11</scala.binary.version>
+    <scala.patch.version>0</scala.patch.version>
     <spark.version>2.4.0</spark.version>
   </properties>
   <licenses>
@@ -99,6 +100,9 @@
         <groupId>net.alchim31.maven</groupId>
         <artifactId>scala-maven-plugin</artifactId>
         <version>4.4.0</version>
+        <configuration>
+          <scalaVersion>${scala.binary.version}.${scala.patch.version}</scalaVersion>
+        </configuration>
         <executions>
           <execution>
             <goals>
@@ -107,9 +111,6 @@
             </goals>
           </execution>
         </executions>
-        <configuration>
-          <scalaVersion>${scala.binary.version}</scalaVersion>
-        </configuration>
       </plugin>
       <!-- enable scalatest -->
       <plugin>
