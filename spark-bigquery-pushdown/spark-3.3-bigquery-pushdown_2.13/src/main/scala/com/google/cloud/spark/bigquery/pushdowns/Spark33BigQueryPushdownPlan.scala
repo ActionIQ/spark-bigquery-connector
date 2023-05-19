@@ -23,7 +23,7 @@ import org.apache.spark.sql.catalyst.expressions.Attribute
 import org.apache.spark.sql.execution.SparkPlan
 
 /** BigQueryPlan, with RDD defined by custom query. */
-case class Spark33BigQueryPushdownPlan(output: Seq[Attribute], rdd: RDD[InternalRow])
+case class Spark33BigQueryPushdownPlan(output: Seq[Attribute], rdd: RDD[InternalRow], sqlString: String)
   extends SparkPlan {
 
   override def children: Seq[SparkPlan] = Nil
