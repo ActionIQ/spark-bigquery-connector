@@ -479,7 +479,7 @@ public class SparkBigQueryConfigTest {
 
   static ImmutableMap<String, String> parameters = ImmutableMap.of("table", "dataset.table");
   static ImmutableMap<String, String> emptyMap = ImmutableMap.of();
-  static String sparkVersion = "2.4.0";
+  static String sparkVersion = "2-4-7-aiq66";
 
   private static Map<String, String> asDataSourceOptionsMap(Map<String, String> map) {
     Map<String, String> result = new HashMap<>();
