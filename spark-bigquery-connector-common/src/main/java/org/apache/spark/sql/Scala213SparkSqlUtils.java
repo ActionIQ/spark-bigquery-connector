@@ -73,6 +73,8 @@ public class Scala213SparkSqlUtils extends SparkSqlUtils {
                         NamedExpression.newExprId(),
                         new ListBuffer<String>().toSeq()))
             .collect(Collectors.toList());
-    return JavaConverters.asScalaBuffer(result).toSeq();
+    return (scala.collection.immutable.Seq<
+            org.apache.spark.sql.catalyst.expressions.AttributeReference>)
+        scala.collection.JavaConverters.asScalaBuffer(result).toSeq();
   }
 }
