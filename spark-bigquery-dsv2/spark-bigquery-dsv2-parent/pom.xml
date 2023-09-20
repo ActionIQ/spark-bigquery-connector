@@ -12,9 +12,6 @@
   <artifactId>spark-bigquery-dsv2-parent</artifactId>
   <name>BigQuery DataSource v2 implementation common settings</name>
   <packaging>pom</packaging>
-  <properties>
-    <spark.version>2-4-7-aiq66</spark.version>
-  </properties>
   <licenses>
     <license>
       <name>Apache License, Version 2.0</name>

@@ -110,6 +110,8 @@
         <deploy.skip>false</deploy.skip>
         <nexus.remote.skip>false</nexus.remote.skip>
         <shade.skip>true</shade.skip>
+        <spark.version>2-4-7-aiq66</spark.version>
+        <scala.binary.version>2.12</scala.binary.version>
         <!-- checkstyle
         <checkstyle.header.file>${reactor.project.basedir}/java.header</checkstyle.header.file>
         -->
