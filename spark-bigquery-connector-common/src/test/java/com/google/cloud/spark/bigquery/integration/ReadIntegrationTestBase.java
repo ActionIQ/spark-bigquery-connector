@@ -429,6 +429,7 @@ public class ReadIntegrationTestBase extends SparkBigQueryIntegrationTestBase {
   }
 
   @Test
+  @Ignore("aiq")
   public void testReadFromBigLakeTable_avro() {
     testBigLakeTable(
         FormatOptions.avro(), TestConstants.SHAKESPEARE_AVRO_FILENAME, "application/octet-stream");

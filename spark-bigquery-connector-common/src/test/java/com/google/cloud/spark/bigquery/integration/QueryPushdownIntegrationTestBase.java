@@ -372,6 +372,20 @@ public class QueryPushdownIntegrationTestBase extends SparkBigQueryIntegrationTe
             .load(TestConstants.SHAKESPEARE_TABLE);
 
     df.createOrReplaceTempView("shakespeare");
+    String query =
+        "SELECT "
+            + "*, "
+            + "ROW_NUMBER() OVER (PARTITION BY corpus ORDER BY corpus_date) as row_number, "
+            + "RANK() OVER (PARTITION BY corpus ORDER BY corpus_date) as rank, "
+            + "DENSE_RANK() OVER (PARTITION BY corpus ORDER BY corpus_date) as dense_rank, "
+            + "PERCENT_RANK() OVER (PARTITION BY corpus ORDER BY corpus_date) as percent_rank, "
+            + "AVG(word_count) OVER (PARTITION BY corpus) as word_count_avg_by_corpus, "
+            + "COUNT(word) OVER (PARTITION BY corpus ORDER BY corpus_date) as num_of_words_in_corpus, "
+            + "COUNT(word) OVER count_window as num_of_words_in_corpus_window_clause "
+            + "FROM shakespeare "
+            + "WINDOW count_window AS (PARTITION BY corpus ORDER BY corpus_date)";
+    logger.warn("DZ DEBUG V2");
+    logger.warn(query);
 
     df =
         spark.sql(
@@ -1080,6 +1094,35 @@ public class QueryPushdownIntegrationTestBase extends SparkBigQueryIntegrationTe
         assertThat(r.get(0)).isEqualTo(r.get(4));
       }
     }
+  }
+
+  @Test
+  /**
+   * Reading from a BigQuery table created with: create or replace table aiq-dev.connector_dev.dt (
+   * id integer, ts1 integer, ts2 integer, tz string );
+   *
+   * <p>insert `aiq-dev.connector_dev.dt` values (0, unix_millis(timestamp("2023-09-01T23:59:59")),
+   * unix_millis(timestamp("2023-09-02T00:00:00")),"UTC"), (1,
+   * unix_millis(timestamp("2023-09-01T23:59:59")),
+   * unix_millis(timestamp("2023-09-02T00:00:00")),"America/New_York"), (2,
+   * unix_millis(timestamp("2023-09-01T23:59:59")),
+   * unix_millis(timestamp("2023-09-02T00:00:00")),"Asia/Shanghai");
+   */
+  public void testAiqDayDiff() {
+    Dataset<Row> df = readTestDataFromBigQuery("connector_dev.dt");
+    df.createOrReplaceTempView("dt");
+    // INSERT might not follow the exact order
+    List<Row> diffs1 =
+        spark.sql("select aiq_day_diff(ts1, ts2, tz) from dt order by id").collectAsList();
+    assertThat(diffs1.size()).isEqualTo(3);
+    assertThat(diffs1.get(0).get(0)).isEqualTo(1);
+    assertThat(diffs1.get(1).get(0)).isEqualTo(0);
+    assertThat(diffs1.get(2).get(0)).isEqualTo(0);
+    List<Row> diff2 =
+        spark
+            .sql("select aiq_day_diff(ts1, unix_timestamp() * 1000, 'UTC') from dt")
+            .collectAsList();
+    assert ((int) diff2.get(0).get(0) > 10); // 2023-09-01 to current
   }
 
   /** Creating a Dataset of NumStructType which will be used to write to BigQuery */
