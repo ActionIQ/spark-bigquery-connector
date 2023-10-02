@@ -215,12 +215,14 @@ abstract class SparkExpressionConverter {
           blockStatement(
             convertStatement(date, fields) + s", ${format.toString()}"
           )
-      // aiq_day_diff(startTsExpr, endTsExpr, timezoneExpr) =>
-      // DATE_DIFF(
-      //   DATE(TIMESTAMP_MILLIS(endTsExpr), timezoneExpr),
-      //   DATE(TIMESTAMP_MILLIS(startTsExpr), timezoneExpr),
-      //   DAY
-      // )
+      /**
+       * aiq_day_diff(startTsExpr, endTsExpr, timezoneExpr) =>
+       * DATE_DIFF(
+       *   DATE(TIMESTAMP_MILLIS(endTsExpr), timezoneExpr),
+       *   DATE(TIMESTAMP_MILLIS(startTsExpr), timezoneExpr),
+       *   DAY
+       * )
+       */
       case AiqDayDiff(startMs, endMs, timezoneId) =>
         val startTs = ConstantString("TIMESTAMP_MILLIS") + blockStatement(convertStatement(startMs, fields))
         val startDt = ConstantString("DATE") + blockStatement(startTs + "," + convertStatement(timezoneId, fields))

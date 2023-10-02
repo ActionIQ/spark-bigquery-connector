@@ -372,20 +372,6 @@ public class QueryPushdownIntegrationTestBase extends SparkBigQueryIntegrationTe
             .load(TestConstants.SHAKESPEARE_TABLE);
 
     df.createOrReplaceTempView("shakespeare");
-    String query =
-        "SELECT "
-            + "*, "
-            + "ROW_NUMBER() OVER (PARTITION BY corpus ORDER BY corpus_date) as row_number, "
-            + "RANK() OVER (PARTITION BY corpus ORDER BY corpus_date) as rank, "
-            + "DENSE_RANK() OVER (PARTITION BY corpus ORDER BY corpus_date) as dense_rank, "
-            + "PERCENT_RANK() OVER (PARTITION BY corpus ORDER BY corpus_date) as percent_rank, "
-            + "AVG(word_count) OVER (PARTITION BY corpus) as word_count_avg_by_corpus, "
-            + "COUNT(word) OVER (PARTITION BY corpus ORDER BY corpus_date) as num_of_words_in_corpus, "
-            + "COUNT(word) OVER count_window as num_of_words_in_corpus_window_clause "
-            + "FROM shakespeare "
-            + "WINDOW count_window AS (PARTITION BY corpus ORDER BY corpus_date)";
-    logger.warn("DZ DEBUG V2");
-    logger.warn(query);
 
     df =
         spark.sql(

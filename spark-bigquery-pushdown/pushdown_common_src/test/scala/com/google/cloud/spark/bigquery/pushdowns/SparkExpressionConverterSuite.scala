@@ -945,7 +945,7 @@ class SparkExpressionConverterSuite extends AnyFunSuite with BeforeAndAfter {
   }
 
   test("convertDateExpressions with AiqDayDiff") {
-    val dayDiff = AiqDayDiff.apply(startMsAttributeReference, Literal(1695945601000L), Literal("UTC"))
+    val dayDiff = AiqDayDiff(startMsAttributeReference, Literal(1695945601000L), Literal("UTC"))
     val bigQuerySQLStatement = expressionConverter.convertDateExpressions(dayDiff, fields)
     assert(bigQuerySQLStatement.exists { s =>
       s.toString == "DATE_DIFF ( DATE ( TIMESTAMP_MILLIS ( 1695945601000 ) , 'UTC' ) , " +

@@ -19,14 +19,11 @@ import org.apache.spark.sql.SparkSession;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.rules.ExternalResource;
-import org.slf4j.Logger;
 
 public class SparkBigQueryIntegrationTestBase {
 
   @ClassRule public static SparkFactory sparkFactory = new SparkFactory();
   @ClassRule public static TestDataset testDataset = new TestDataset();
-
-  static Logger logger = org.slf4j.LoggerFactory.getLogger(SparkBigQueryIntegrationTestBase.class);
 
   protected SparkSession spark;
   protected String testTable;
@@ -51,8 +48,7 @@ public class SparkBigQueryIntegrationTestBase {
               .config("spark.ui.enabled", "false")
               .config("spark.default.parallelism", 20)
               .getOrCreate();
-      // reducing test's logs
-      spark.sparkContext().setLogLevel("WARN");
+      spark.sparkContext().setLogLevel("INFO"); // helpful for viewing queries running in BQ
     }
   }
 
