@@ -20,11 +20,13 @@ import static com.google.common.truth.Truth.assertThat;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.catalyst.expressions.GenericRow;
 import org.apache.spark.unsafe.types.UTF8String;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class Scala213SparkSqlUtilsTest {
 
   @Test
+  @Ignore("aiq scala 2.13 not in use")
   public void testRowToInternalRow() throws Exception {
     SparkSqlUtils ssu = SparkSqlUtils.getInstance();
     assertThat(ssu).isInstanceOf(Scala213SparkSqlUtils.class);

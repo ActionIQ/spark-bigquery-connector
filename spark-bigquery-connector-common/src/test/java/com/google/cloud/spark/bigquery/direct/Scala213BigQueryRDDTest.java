@@ -20,11 +20,13 @@ import static com.google.common.truth.Truth.assertThat;
 import org.apache.spark.rdd.RDD;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.catalyst.InternalRow;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class Scala213BigQueryRDDTest {
 
   @Test
+  @Ignore("aiq scala 2.13 not in use")
   public void testCreateScala213BigQueryRDD() throws Exception {
     SparkSession sparkSession =
         SparkSession.builder().master("local").appName(getClass().getName()).getOrCreate();

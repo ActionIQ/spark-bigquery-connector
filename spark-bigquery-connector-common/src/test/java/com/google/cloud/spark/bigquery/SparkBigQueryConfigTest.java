@@ -925,11 +925,11 @@ public class SparkBigQueryConfigTest {
   public void testMissingAvroMessage() {
     Exception cause = new Exception("test");
     IllegalStateException before24 =
-        SparkBigQueryConfig.IntermediateFormat.missingAvroException("2.3.5", cause);
+        SparkBigQueryConfig.IntermediateFormat.missingAvroException("2-3-5-aiq1", cause);
     assertThat(before24.getMessage()).contains("com.databricks:spark-avro_2.11:4.0.0");
     IllegalStateException after24 =
-        SparkBigQueryConfig.IntermediateFormat.missingAvroException("2.4.8", cause);
-    assertThat(after24.getMessage()).contains("org.apache.spark:spark-avro_2.13:2.4.8");
+        SparkBigQueryConfig.IntermediateFormat.missingAvroException("2-4-7-aiq2", cause);
+    assertThat(after24.getMessage()).contains("org.apache.spark:spark-avro_2.12:2-4-7-aiq2");
   }
 
   @Test
