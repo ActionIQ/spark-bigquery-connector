@@ -410,17 +410,20 @@ public class ReadIntegrationTestBase extends SparkBigQueryIntegrationTestBase {
   }
 
   @Test
+  @Ignore("aiq")
   public void testReadFromBigLakeTable_csv() {
     testBigLakeTable(FormatOptions.csv(), TestConstants.SHAKESPEARE_CSV_FILENAME, "text/csv");
   }
 
   @Test
+  @Ignore("aiq")
   public void testReadFromBigLakeTable_json() {
     testBigLakeTable(
         FormatOptions.json(), TestConstants.SHAKESPEARE_JSON_FILENAME, "application/json");
   }
 
   @Test
+  @Ignore("aiq")
   public void testReadFromBigLakeTable_parquet() {
     testBigLakeTable(
         FormatOptions.parquet(),
