@@ -47,6 +47,42 @@
         </repository>
     </distributionManagement>
 
+    <repositories>
+        <repository>
+            <id>central</id>
+            <name>Maven Repository</name>
+            <url>https://repo.maven.apache.org/maven2</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>aiq-releases-artifactory</id>
+            <name>Artifactory Releases</name>
+            <url>https://actioniq.jfrog.io/artifactory/aiq-sbt</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>aiq-releases-s3</id>
+            <name>AWS Releases Repository</name>
+            <url>s3://aiq-artifacts/releases</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
+
     <properties>
         <gpg.skip>true</gpg.skip>
         <revision>0.30.0-aiq4</revision>
@@ -75,6 +111,9 @@
         <!-- checkstyle
         <checkstyle.header.file>${reactor.project.basedir}/java.header</checkstyle.header.file>
         -->
+        <spark.version>3-3-2-aiq35</spark.version>
+        <scala.binary.version>2.12</scala.binary.version>
+        <scala.patch.version>15</scala.patch.version>
     </properties>
     <dependencyManagement>
         <dependencies>
