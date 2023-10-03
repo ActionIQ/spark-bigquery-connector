@@ -35,7 +35,6 @@ import static org.apache.spark.sql.types.DataTypes.TimestampType;
 import com.google.cloud.spark.bigquery.integration.model.ColumnOrderTestClass;
 import com.google.cloud.spark.bigquery.integration.model.NumStruct;
 import com.google.cloud.spark.bigquery.integration.model.StringStruct;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.math.BigDecimal;
 import java.math.MathContext;
@@ -73,15 +72,8 @@ public class TestConstants {
   static final long SHAKESPEARE_TABLE_NUM_ROWS = 164656L;
   static final String TEMPORARY_GCS_BUCKET_ENV_VARIABLE = "TEMPORARY_GCS_BUCKET";
   static final String BIGLAKE_CONNECTION_ID_ENV_VARIABLE = "BIGLAKE_CONNECTION_ID";
-  static final String TEMPORARY_GCS_BUCKET =
-      Preconditions.checkNotNull(
-          System.getenv(TEMPORARY_GCS_BUCKET_ENV_VARIABLE),
-          "Please set the %s env variable to point to a write enabled GCS bucket",
-          TEMPORARY_GCS_BUCKET_ENV_VARIABLE);
-  static final String BIGLAKE_CONNECTION_ID =
-      Preconditions.checkNotNull(
-          System.getenv(BIGLAKE_CONNECTION_ID_ENV_VARIABLE),
-          "Please set the BIGLAKE_CONNECTION_ID env variable in order to create biglake table");
+  static final String TEMPORARY_GCS_BUCKET = "";
+  static final String BIGLAKE_CONNECTION_ID = "";
   static final String SHAKESPEARE_CSV_FILENAME = "shakespeare.csv";
   static final String SHAKESPEARE_JSON_FILENAME = "shakespeare.json";
   static final String SHAKESPEARE_AVRO_FILENAME = "shakespeare.avro";

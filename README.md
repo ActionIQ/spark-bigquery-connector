@@ -1304,17 +1304,44 @@ This places artifacts in `~/.m2/repository/`
 ./mvnw clean install
 ```
 
-# Tests
+# Unit Tests
 Run all tests except acceptance test and integration tests
 ```
 ./mvnw test -fn
 ```
 
-Acceptance Tests and Integration Tests need additional GCP settings
+# Integration Tests
+To run integration test with `aiq-dev` BigQuery instance, download the service account credentials to a local
+file, then run
+```bash
+export GOOGLE_APPLICATION_CREDENTIALS=<path_to_the_file>
+export GOOGLE_CLOUD_PROJECT=aiq-dev
 ```
-./mvnw integration-test -P acceptance
-./mvnw integration-test -P integration
+
+Run integration tests:
+```bash
+# make sure to do this after updating tests - for some reason failsafe:integration-test doesn't compile tests before running
+./mvnw install -Pintegration -DskipTests
+
+# Test pushdown statements
+./mvnw failsafe:integration-test -fn \
+  -Dfailsafe.failIfNoSpecifiedTests=false \
+  -Dit.test=com.google.cloud.spark.bigquery.integration.Spark33QueryPushdownIntegrationTest
+
+# Test read
+./mvnw failsafe:integration-test -fn \
+  -Dfailsafe.failIfNoSpecifiedTests=false \
+  -Dit.test=com.google.cloud.spark.bigquery.integration.Spark33ReadFromQueryIntegrationTest
+
+./mvnw failsafe:integration-test -fn \
+  -Dfailsafe.failIfNoSpecifiedTests=false \
+  -Dit.test=com.google.cloud.spark.bigquery.integration.Spark33ReadIntegrationTest
 ```
+
+If tests failed, there might be some residual testing datasets named with `spark_bigquery_<ts>_<number>`
+left in `aiq-dev` project. Remember to delete them.
+
+TODO figure out acceptance test
 
 # Deploy
 To deploy to AIQ artifactory https://actioniq.jfrog.io/artifactory/aiq-sbt-local
