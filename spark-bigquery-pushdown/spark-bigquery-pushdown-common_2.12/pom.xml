@@ -12,12 +12,6 @@
 
   <artifactId>spark-bigquery-pushdown-common_2.12</artifactId>
 
-  <properties>
-    <scala.binary.version>2.12</scala.binary.version>
-    <scala.patch.version>15</scala.patch.version>
-    <spark.version>3.3.2</spark.version>
-  </properties>
-
   <build>
     <plugins>
       <!-- make sure we don't have any _2.10 or _2.11 or _2.13 dependencies when building

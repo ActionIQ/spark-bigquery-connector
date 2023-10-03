@@ -44,12 +44,12 @@ public class SparkBigQueryIntegrationTestBase {
     protected void before() throws Throwable {
       spark =
           SparkSession.builder()
-              .master("local")
+              .master("local[*]")
               .config("spark.ui.enabled", "false")
               .config("spark.default.parallelism", 20)
               .getOrCreate();
-      // reducing test's logs
-      spark.sparkContext().setLogLevel("WARN");
+      // helpful for checking queries running in BQ
+      spark.sparkContext().setLogLevel("INFO");
     }
   }
 

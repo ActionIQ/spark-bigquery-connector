@@ -50,7 +50,7 @@ import org.junit.Test;
 public class SparkBigQueryConfigTest {
 
   public static final int DEFAULT_PARALLELISM = 10;
-  public static final String SPARK_VERSION = "2.4.0";
+  public static final String SPARK_VERSION = "3-3-2-aiq35";
   private static ImmutableMap<String, String> build;
   ImmutableMap<String, String> defaultOptions = ImmutableMap.of("table", "dataset.table");
   // "project", "test_project"); // to remove the need for default project
@@ -487,7 +487,7 @@ public class SparkBigQueryConfigTest {
 
   static ImmutableMap<String, String> parameters = ImmutableMap.of("table", "dataset.table");
   static ImmutableMap<String, String> emptyMap = ImmutableMap.of();
-  static String sparkVersion = "2.4.0";
+  static String sparkVersion = "3-3-2-aiq35";
 
   private static Map<String, String> asDataSourceOptionsMap(Map<String, String> map) {
     Map<String, String> result = new HashMap<>();
@@ -953,7 +953,7 @@ public class SparkBigQueryConfigTest {
     assertThat(before24.getMessage()).contains("com.databricks:spark-avro_2.11:4.0.0");
     IllegalStateException after24 =
         SparkBigQueryConfig.IntermediateFormat.missingAvroException("2.4.8", cause);
-    assertThat(after24.getMessage()).contains("org.apache.spark:spark-avro_2.13:2.4.8");
+    assertThat(after24.getMessage()).contains("org.apache.spark:spark-avro_2.12:2.4.8");
   }
 
   @Test

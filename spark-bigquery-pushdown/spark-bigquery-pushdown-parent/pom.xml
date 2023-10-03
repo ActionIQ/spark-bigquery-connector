@@ -14,11 +14,6 @@
   <name>Spark BigQuery Predicate Pushdown Implementation common settings</name>
 
   <packaging>pom</packaging>
-  <properties>
-    <scala.binary.version>2.11</scala.binary.version>
-    <scala.patch.version>0</scala.patch.version>
-    <spark.version>2.4.0</spark.version>
-  </properties>
   <licenses>
     <license>
       <name>Apache License, Version 2.0</name>
