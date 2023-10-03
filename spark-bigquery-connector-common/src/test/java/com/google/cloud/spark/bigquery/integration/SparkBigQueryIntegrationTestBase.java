@@ -48,7 +48,7 @@ public class SparkBigQueryIntegrationTestBase {
               .config("spark.ui.enabled", "false")
               .config("spark.default.parallelism", 20)
               .getOrCreate();
-      // reducing test's logs
+      // helpful for checking queries running in BQ
       spark.sparkContext().setLogLevel("INFO");
     }
   }
