@@ -11,12 +11,10 @@ class UnionQuerySuite extends AnyFunSuite{
   test(testName = "getStatement with nonempty children and useAlias true") {
     val unionQuery1 = UnionQuery(expressionConverter, expressionFactory, Seq(sourceQuery1, sourceQuery2), SUBQUERY_2_ALIAS)
     val bigQuerySQLStatement1 = unionQuery1.getStatement(true)
-    println(bigQuerySQLStatement1)
     assert(bigQuerySQLStatement1.toString == "( ( SELECT * FROM `test_project:test_dataset.test_table` AS BQ_CONNECTOR_QUERY_ALIAS ) UNION ALL ( SELECT * FROM `test_project:test_dataset.test_table` AS BQ_CONNECTOR_QUERY_ALIAS ) ) AS SUBQUERY_2")
 
     val unionQuery2 = UnionQuery(expressionConverter, expressionFactory, Seq(sourceQuery1.copy(selectAttributes = true), sourceQuery2.copy(selectAttributes = true)), SUBQUERY_2_ALIAS)
     val bigQuerySQLStatement2 = unionQuery2.getStatement(true)
-    println(bigQuerySQLStatement2)
     assert(bigQuerySQLStatement2.toString == "( ( SELECT SCHOOLID , SCHOOLNAME FROM `test_project:test_dataset.test_table` AS BQ_CONNECTOR_QUERY_ALIAS ) UNION ALL ( SELECT SCHOOLID , SCHOOLNAME FROM `test_project:test_dataset.test_table` AS BQ_CONNECTOR_QUERY_ALIAS ) ) AS SUBQUERY_2")
   }
 
