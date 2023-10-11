@@ -1111,6 +1111,23 @@ public class QueryPushdownIntegrationTestBase extends SparkBigQueryIntegrationTe
     assert ((int) diff2.get(0).get(0) > 10); // 2023-09-01 to current
   }
 
+  @Test
+  /** AIQ EXE-2026 */
+  public void testSourceQuery() {
+    Dataset<Row> df = readTestDataFromBigQuery("connector_dev.basic");
+    df.createOrReplaceTempView("t");
+    Dataset<Row> df1 = spark.sql("select str_field from t limit 1");
+    Dataset<Row> df2 = spark.sql("select * from t limit 1");
+
+    List<Row> res1 = df1.collectAsList();
+    assertThat(res1.size()).isEqualTo(1);
+    assertThat(res1.get(0).size()).isEqualTo(1);
+
+    List<Row> res2 = df2.collectAsList();
+    assertThat(res2.size()).isEqualTo(1);
+    assertThat(res2.get(0).size()).isEqualTo(df.schema().size());
+  }
+
   /** Creating a Dataset of NumStructType which will be used to write to BigQuery */
   protected Dataset<Row> getNumStructDataFrame(List<NumStruct> numStructList) {
     return spark.createDataset(numStructList, Encoders.bean(NumStruct.class)).toDF();
