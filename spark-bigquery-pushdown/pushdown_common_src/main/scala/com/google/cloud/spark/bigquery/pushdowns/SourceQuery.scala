@@ -1,15 +1,17 @@
 package com.google.cloud.spark.bigquery.pushdowns
 
 import com.google.cloud.spark.bigquery.direct.BigQueryRDDFactory
-import org.apache.spark.sql.catalyst.expressions.Attribute
+import com.google.cloud.spark.bigquery.pushdowns.SparkBigQueryPushdownUtil.makeStatement
+import org.apache.spark.sql.catalyst.expressions.{Attribute, NamedExpression}
 
-/** The base query representing a BigQuery table
+/** The base query representing a BigQuery table with all or subset of its columns
  *
  * @constructor
  * @param tableName   The BigQuery table to be queried
  * @param outputAttributes  Columns used to override the output generation
  *                    These are the columns resolved by DirectBigQueryRelation.
  * @param alias      Query alias.
+ * @param selectAttributes If true, select columns in [[outputAttributes]], else include all columns
  */
 case class SourceQuery(
     expressionConverter: SparkExpressionConverter,
@@ -18,7 +20,8 @@ case class SourceQuery(
     tableName: String,
     outputAttributes: Seq[Attribute],
     alias: String,
-    pushdownFilters: Option[String] = None)
+    pushdownFilters: Option[String] = None,
+    selectAttributes: Boolean = false)
   extends BigQuerySQLQuery(
     expressionConverter,
     expressionFactory,
@@ -36,4 +39,14 @@ case class SourceQuery(
             EmptyBigQuerySQLStatement()
         }
     }
+
+    /** Builds the SELECT statement of the source query, if [[selectAttributes]] */
+    override val columns: Option[BigQuerySQLStatement] = {
+      if (selectAttributes) {
+        Option(
+          makeStatement(outputAttributes.map(expressionConverter.convertStatement(_, outputAttributes)), ",")
+        )
+      } else { None }
+    }
+
 }

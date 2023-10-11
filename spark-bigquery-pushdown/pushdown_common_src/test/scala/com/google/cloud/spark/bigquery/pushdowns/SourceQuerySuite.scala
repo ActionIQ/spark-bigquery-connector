@@ -6,6 +6,7 @@ import org.scalatest.funsuite.AnyFunSuite
 class SourceQuerySuite extends AnyFunSuite{
 
   private val sourceQuery = SourceQuery(expressionConverter, expressionFactory, bigQueryRDDFactoryMock, TABLE_NAME, Seq(schoolIdAttributeReference, schoolNameAttributeReference), SUBQUERY_0_ALIAS)
+  private val sourceQuery2 = SourceQuery(expressionConverter, expressionFactory, bigQueryRDDFactoryMock, TABLE_NAME, Seq(schoolIdAttributeReference, schoolNameAttributeReference), SUBQUERY_0_ALIAS, selectAttributes = true)
 
   test("sourceStatement") {
     assert(sourceQuery.sourceStatement.toString == "`test_project:test_dataset.test_table` AS BQ_CONNECTOR_QUERY_ALIAS")
@@ -64,5 +65,10 @@ class SourceQuerySuite extends AnyFunSuite{
     val returnedQuery = sourceQuery.find({ case q: SourceQuery => q })
     assert(returnedQuery.isDefined)
     assert(returnedQuery.get == sourceQuery)
+  }
+
+  test("with projection") {
+    println(sourceQuery2.getStatement().toString)
+    assert(sourceQuery2.getStatement().toString == "SELECT SchoolID, SchoolName FROM `test_project:test_dataset.test_table` AS BQ_CONNECTOR_QUERY_ALIAS")
   }
 }
