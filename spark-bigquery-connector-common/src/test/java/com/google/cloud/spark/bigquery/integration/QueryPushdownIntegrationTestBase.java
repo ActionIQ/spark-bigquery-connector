@@ -30,6 +30,7 @@ import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
 import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema;
+import org.apache.spark.sql.execution.SparkPlan;
 import org.junit.Test;
 
 public class QueryPushdownIntegrationTestBase extends SparkBigQueryIntegrationTestBase {
@@ -332,7 +333,7 @@ public class QueryPushdownIntegrationTestBase extends SparkBigQueryIntegrationTe
     writeTestDataToBigQuery(
         getNumStructDataFrame(TestConstants.numStructDataset),
         testDataset.toString() + "." + testTable);
-    df = readTestDataFromBigQuery(testDataset.toString() + "." + testTable);
+    df = readTestDataFromBigQuery(testDataset.toString(), testDataset.toString() + "." + testTable);
     df.createOrReplaceTempView("numStructDF");
 
     result =
@@ -468,7 +469,8 @@ public class QueryPushdownIntegrationTestBase extends SparkBigQueryIntegrationTe
     writeTestDataToBigQuery(
         getNumStructDataFrame(TestConstants.numStructDataset),
         testDataset.toString() + "." + testTable);
-    Dataset<Row> df = readTestDataFromBigQuery(testDataset.toString() + "." + testTable);
+    Dataset<Row> df =
+        readTestDataFromBigQuery(testDataset.toString(), testDataset.toString() + "." + testTable);
     df.createOrReplaceTempView("numStructDF");
 
     List<Row> result =
@@ -511,7 +513,8 @@ public class QueryPushdownIntegrationTestBase extends SparkBigQueryIntegrationTe
         getNumStructDataFrame(TestConstants.numStructDataset),
         testDataset.toString() + "." + testTable);
     // Creating a DataFrame of schema NumStruct, and writing it to BigQuery
-    Dataset<Row> df = readTestDataFromBigQuery(testDataset.toString() + "." + testTable);
+    Dataset<Row> df =
+        readTestDataFromBigQuery(testDataset.toString(), testDataset.toString() + "." + testTable);
 
     writeTestDataToBigQuery(
         getNumStructDataFrame(TestConstants.numStructDatasetForJoin),
@@ -519,7 +522,8 @@ public class QueryPushdownIntegrationTestBase extends SparkBigQueryIntegrationTe
     // Creating an additional DataFrame of schema NumStruct, and writing it to BigQuery which will
     // be used for join
     Dataset<Row> df_to_join =
-        readTestDataFromBigQuery(testDataset.toString() + "." + testTable + "_to_join");
+        readTestDataFromBigQuery(
+            testDataset.toString(), testDataset.toString() + "." + testTable + "_to_join");
 
     // disabling pushdown to collect the join result to compare with pushdown enabled
     BigQueryConnectorUtils.disablePushdownSession(spark);
@@ -571,13 +575,15 @@ public class QueryPushdownIntegrationTestBase extends SparkBigQueryIntegrationTe
     writeTestDataToBigQuery(
         getNumStructDataFrame(TestConstants.numStructDataset),
         testDataset.toString() + "." + testTable);
-    Dataset<Row> df = readTestDataFromBigQuery(testDataset.toString() + "." + testTable);
+    Dataset<Row> df =
+        readTestDataFromBigQuery(testDataset.toString(), testDataset.toString() + "." + testTable);
 
     writeTestDataToBigQuery(
         getNumStructDataFrame(TestConstants.numStructDatasetForJoin),
         testDataset.toString() + "." + testTable + "_to_join");
     Dataset<Row> df_to_join =
-        readTestDataFromBigQuery(testDataset.toString() + "." + testTable + "_to_join");
+        readTestDataFromBigQuery(
+            testDataset.toString(), testDataset.toString() + "." + testTable + "_to_join");
 
     // disabling pushdown to collect the join result to compare with pushdown enabled
     BigQueryConnectorUtils.disablePushdownSession(spark);
@@ -670,13 +676,15 @@ public class QueryPushdownIntegrationTestBase extends SparkBigQueryIntegrationTe
     writeTestDataToBigQuery(
         getNumStructDataFrame(TestConstants.numStructDataset),
         testDataset.toString() + "." + testTable);
-    Dataset<Row> df = readTestDataFromBigQuery(testDataset.toString() + "." + testTable);
+    Dataset<Row> df =
+        readTestDataFromBigQuery(testDataset.toString(), testDataset.toString() + "." + testTable);
 
     writeTestDataToBigQuery(
         getNumStructDataFrame(TestConstants.numStructDatasetForJoin),
         testDataset.toString() + "." + testTable + "_to_join");
     Dataset<Row> df_to_join =
-        readTestDataFromBigQuery(testDataset.toString() + "." + testTable + "_to_join");
+        readTestDataFromBigQuery(
+            testDataset.toString(), testDataset.toString() + "." + testTable + "_to_join");
 
     // disabling pushdown to collect the join result to compare with pushdown enabled
     BigQueryConnectorUtils.disablePushdownSession(spark);
@@ -771,13 +779,15 @@ public class QueryPushdownIntegrationTestBase extends SparkBigQueryIntegrationTe
     writeTestDataToBigQuery(
         getNumStructDataFrame(TestConstants.numStructDataset),
         testDataset.toString() + "." + testTable);
-    Dataset<Row> df = readTestDataFromBigQuery(testDataset.toString() + "." + testTable);
+    Dataset<Row> df =
+        readTestDataFromBigQuery(testDataset.toString(), testDataset.toString() + "." + testTable);
 
     writeTestDataToBigQuery(
         getNumStructDataFrame(TestConstants.numStructDatasetForJoin),
         testDataset.toString() + "." + testTable + "_to_join");
     Dataset<Row> df_to_join =
-        readTestDataFromBigQuery(testDataset.toString() + "." + testTable + "_to_join");
+        readTestDataFromBigQuery(
+            testDataset.toString(), testDataset.toString() + "." + testTable + "_to_join");
 
     // disabling pushdown to collect the join result to compare with pushdown enabled
     BigQueryConnectorUtils.disablePushdownSession(spark);
@@ -874,13 +884,15 @@ public class QueryPushdownIntegrationTestBase extends SparkBigQueryIntegrationTe
     writeTestDataToBigQuery(
         getNumStructDataFrame(TestConstants.numStructDataset),
         testDataset.toString() + "." + testTable);
-    Dataset<Row> df = readTestDataFromBigQuery(testDataset.toString() + "." + testTable);
+    Dataset<Row> df =
+        readTestDataFromBigQuery(testDataset.toString(), testDataset.toString() + "." + testTable);
 
     writeTestDataToBigQuery(
         getNumStructDataFrame(TestConstants.numStructDatasetForJoin),
         testDataset.toString() + "." + testTable + "_to_join");
     Dataset<Row> df_to_join =
-        readTestDataFromBigQuery(testDataset.toString() + "." + testTable + "_to_join");
+        readTestDataFromBigQuery(
+            testDataset.toString(), testDataset.toString() + "." + testTable + "_to_join");
 
     // disabling pushdown to collect the join result to compare with pushdown enabled
     BigQueryConnectorUtils.disablePushdownSession(spark);
@@ -915,13 +927,15 @@ public class QueryPushdownIntegrationTestBase extends SparkBigQueryIntegrationTe
     writeTestDataToBigQuery(
         getNumStructDataFrame(TestConstants.numStructDataset),
         testDataset.toString() + "." + testTable);
-    Dataset<Row> df = readTestDataFromBigQuery(testDataset.toString() + "." + testTable);
+    Dataset<Row> df =
+        readTestDataFromBigQuery(testDataset.toString(), testDataset.toString() + "." + testTable);
 
     writeTestDataToBigQuery(
         getNumStructDataFrame(TestConstants.numStructDatasetForJoin),
         testDataset.toString() + "." + testTable + "_to_join");
     Dataset<Row> df_to_join =
-        readTestDataFromBigQuery(testDataset.toString() + "." + testTable + "_to_join");
+        readTestDataFromBigQuery(
+            testDataset.toString(), testDataset.toString() + "." + testTable + "_to_join");
 
     // disabling pushdown to collect the join result to compare with pushdown enabled
     BigQueryConnectorUtils.disablePushdownSession(spark);
@@ -976,13 +990,15 @@ public class QueryPushdownIntegrationTestBase extends SparkBigQueryIntegrationTe
     writeTestDataToBigQuery(
         getNumStructDataFrame(TestConstants.numStructDataset),
         testDataset.toString() + "." + testTable);
-    Dataset<Row> df = readTestDataFromBigQuery(testDataset.toString() + "." + testTable);
+    Dataset<Row> df =
+        readTestDataFromBigQuery(testDataset.toString(), testDataset.toString() + "." + testTable);
 
     writeTestDataToBigQuery(
         getNumStructDataFrame(TestConstants.numStructDatasetForJoin),
         testDataset.toString() + "." + testTable + "_to_join");
     Dataset<Row> df_to_join =
-        readTestDataFromBigQuery(testDataset.toString() + "." + testTable + "_to_join");
+        readTestDataFromBigQuery(
+            testDataset.toString(), testDataset.toString() + "." + testTable + "_to_join");
 
     // disabling pushdown to collect the join result to compare with pushdown enabled
     BigQueryConnectorUtils.disablePushdownSession(spark);
@@ -1030,14 +1046,16 @@ public class QueryPushdownIntegrationTestBase extends SparkBigQueryIntegrationTe
     writeTestDataToBigQuery(
         getNumStructDataFrame(TestConstants.numStructDataset),
         testDataset.toString() + "." + testTable);
-    Dataset<Row> df = readTestDataFromBigQuery(testDataset.toString() + "." + testTable);
+    Dataset<Row> df =
+        readTestDataFromBigQuery(testDataset.toString(), testDataset.toString() + "." + testTable);
     df.createOrReplaceTempView("numStructDF");
 
     writeTestDataToBigQuery(
         getNumStructDataFrame(TestConstants.numStructDatasetForJoin),
         testDataset.toString() + "." + testTable + "_to_join");
     Dataset<Row> df_to_join =
-        readTestDataFromBigQuery(testDataset.toString() + "." + testTable + "_to_join");
+        readTestDataFromBigQuery(
+            testDataset.toString(), testDataset.toString() + "." + testTable + "_to_join");
     df_to_join.createOrReplaceTempView("numStructDF_to_join");
 
     String query =
@@ -1095,7 +1113,7 @@ public class QueryPushdownIntegrationTestBase extends SparkBigQueryIntegrationTe
    * unix_millis(timestamp("2023-09-02T00:00:00")),"Asia/Shanghai");
    */
   public void testAiqDayDiff() {
-    Dataset<Row> df = readTestDataFromBigQuery("connector_dev.dt");
+    Dataset<Row> df = readTestDataFromBigQuery("connector_dev", "connector_dev.dt");
     df.createOrReplaceTempView("dt");
     // INSERT might not follow the exact order
     List<Row> diffs1 =
@@ -1114,10 +1132,16 @@ public class QueryPushdownIntegrationTestBase extends SparkBigQueryIntegrationTe
   @Test
   /** AIQ EXE-2026 */
   public void testSourceQuery() {
-    Dataset<Row> df = readTestDataFromBigQuery("connector_dev.basic");
+    Dataset<Row> df = readTestDataFromBigQuery("connector_dev", "connector_dev.basic");
     df.createOrReplaceTempView("t");
     Dataset<Row> df1 = spark.sql("select str_field from t limit 1");
     Dataset<Row> df2 = spark.sql("select * from t limit 1");
+    SparkPlan sp1 = df1.queryExecution().sparkPlan();
+    SparkPlan sp2 = df2.queryExecution().sparkPlan();
+
+    assertThat(sp1.toString()).contains("SELECT STR_FIELD FROM `connector_dev.basic`");
+    // should select all columns instead *
+    assertThat(sp2.toString()).doesNotContain("SELECT * FROM `connector_dev.basic`");
 
     List<Row> res1 = df1.collectAsList();
     assertThat(res1.size()).isEqualTo(1);
@@ -1143,12 +1167,19 @@ public class QueryPushdownIntegrationTestBase extends SparkBigQueryIntegrationTe
         .save();
   }
 
-  /** Method to read the test table of schema NumStruct, in test dataset */
-  protected Dataset<Row> readTestDataFromBigQuery(String table) {
+  /**
+   * Method to read the test table from a BigQuery dataset
+   *
+   * @param dataset: the dataset where the table is located
+   * @param table: in format of "dataset_name.table_name"
+   */
+  protected Dataset<Row> readTestDataFromBigQuery(String dataset, String table) {
     return spark
         .read()
         .format("bigquery")
-        .option("materializationDataset", testDataset.toString())
+        .option("materializationDataset", dataset)
+        .option("viewsEnabled", true)
+        .option("materializationExpirationTimeInMinutes", 30)
         .load(table);
   }
 }
