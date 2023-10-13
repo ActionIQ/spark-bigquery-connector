@@ -41,7 +41,7 @@ case class SourceQuery(
     }
 
     /** Builds the SELECT statement of the source query, if [[selectAttributes]] */
-    override val columns: Option[BigQuerySQLStatement] = {
+    override def columns: Option[BigQuerySQLStatement] = {
       if (selectAttributes) {
         Option(
           makeStatement(outputAttributes.map(expressionConverter.convertStatement(_, outputAttributes)), ",")
