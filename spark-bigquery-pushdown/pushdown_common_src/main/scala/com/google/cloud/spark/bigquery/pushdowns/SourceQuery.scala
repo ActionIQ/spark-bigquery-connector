@@ -46,7 +46,7 @@ case class SourceQuery(
         Option(
           makeStatement(outputAttributes.map(expressionConverter.convertStatement(_, outputAttributes)), ",")
         )
-      } else { None }
+      } else { super.columns }
     }
 
 }
