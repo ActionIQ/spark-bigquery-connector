@@ -31,6 +31,7 @@ import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
 import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema;
 import org.apache.spark.sql.execution.SparkPlan;
+import org.apache.spark.sql.types.DataTypes;
 import org.junit.Test;
 
 public class QueryPushdownIntegrationTestBase extends SparkBigQueryIntegrationTestBase {
@@ -1132,16 +1133,30 @@ public class QueryPushdownIntegrationTestBase extends SparkBigQueryIntegrationTe
   @Test
   /** AIQ EXE-2026 */
   public void testSourceQuery() {
+    spark
+        .sqlContext()
+        .udf()
+        .register(
+            "appendStr",
+            (String s) -> {
+              return s + "abc";
+            },
+            DataTypes.StringType);
     Dataset<Row> df = readTestDataFromBigQuery("connector_dev", "connector_dev.basic");
     df.createOrReplaceTempView("t");
     Dataset<Row> df1 = spark.sql("select str_field from t limit 1");
     Dataset<Row> df2 = spark.sql("select * from t limit 1");
+    Dataset<Row> df3 = spark.sql("select *, str_field from t limit 1");
+    Dataset<Row> df4 = spark.sql("select num_field from t where appendStr(str_field) like 'a%'");
     SparkPlan sp1 = df1.queryExecution().sparkPlan();
     SparkPlan sp2 = df2.queryExecution().sparkPlan();
+    SparkPlan sp3 = df3.queryExecution().sparkPlan();
 
     assertThat(sp1.toString()).contains("SELECT STR_FIELD FROM `connector_dev.basic`");
-    // should select all columns instead *
+    // should select all columns instead of SELECT *
     assertThat(sp2.toString()).doesNotContain("SELECT * FROM `connector_dev.basic`");
+    // select all columns from source table, the project all columns + str_field
+    assertThat(sp3.toString()).doesNotMatch("SELECT \\*,[a-zA-Z_]* FROM `connector_dev.basic`");
 
     List<Row> res1 = df1.collectAsList();
     assertThat(res1.size()).isEqualTo(1);
@@ -1150,6 +1165,10 @@ public class QueryPushdownIntegrationTestBase extends SparkBigQueryIntegrationTe
     List<Row> res2 = df2.collectAsList();
     assertThat(res2.size()).isEqualTo(1);
     assertThat(res2.get(0).size()).isEqualTo(df.schema().size());
+
+    List<Row> res4 = df4.collectAsList();
+    assertThat(res4.size()).isEqualTo(1);
+    assertThat(res4.get(0).size()).isEqualTo(1);
   }
 
   /** Creating a Dataset of NumStructType which will be used to write to BigQuery */
