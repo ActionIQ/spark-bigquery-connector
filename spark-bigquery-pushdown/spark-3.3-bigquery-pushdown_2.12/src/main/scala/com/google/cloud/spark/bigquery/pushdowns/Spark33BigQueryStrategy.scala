@@ -24,16 +24,17 @@ class Spark33BigQueryStrategy(expressionConverter: SparkExpressionConverter, exp
   override def generateQueryFromPlanForDataSourceV2(plan: LogicalPlan): Option[BigQuerySQLQuery] = {
     // DataSourceV2ScanRelation is the relation that is used in the Spark 3.3 DatasourceV2 connector
     plan match {
-      case scanRelation@DataSourceV2ScanRelation(_, _, _, _) =>
-        scanRelation.scan match {
+      case DataSourceV2ScanRelation(relation, scan, output, _) =>
+        scan match {
           case scan: SupportsQueryPushdown =>
             Some(SourceQuery(expressionConverter = expressionConverter,
               expressionFactory = expressionFactory,
               bigQueryRDDFactory = scan.getBigQueryRDDFactory,
-              tableName = SparkBigQueryUtil.getTableNameFromOptions(scanRelation.relation.options.asInstanceOf[java.util.Map[String, String]]),
-              outputAttributes = scanRelation.output,
+              tableName = SparkBigQueryUtil.getTableNameFromOptions(relation.options.asInstanceOf[java.util.Map[String, String]]),
+              outputAttributes = output,
               alias = alias.next,
-              pushdownFilters = if (scan.getPushdownFilters.isPresent) Some(scan.getPushdownFilters.get) else None
+              pushdownFilters = if (scan.getPushdownFilters.isPresent) Some(scan.getPushdownFilters.get) else None,
+              selectAttributes = true
             ))
 
           case _ => None

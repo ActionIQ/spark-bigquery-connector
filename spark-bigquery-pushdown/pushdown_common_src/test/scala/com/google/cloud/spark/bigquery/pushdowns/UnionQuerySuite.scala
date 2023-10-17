@@ -9,9 +9,13 @@ class UnionQuerySuite extends AnyFunSuite{
   private val sourceQuery2 = SourceQuery(expressionConverter, expressionFactory, bigQueryRDDFactoryMock, TABLE_NAME, Seq(schoolIdAttributeReference, schoolNameAttributeReference), SUBQUERY_1_ALIAS)
 
   test(testName = "getStatement with nonempty children and useAlias true") {
-    val unionQuery = UnionQuery(expressionConverter, expressionFactory, Seq(sourceQuery1, sourceQuery2), SUBQUERY_2_ALIAS)
-    val bigQuerySQLStatement = unionQuery.getStatement(true)
-    assert(bigQuerySQLStatement.toString == "( ( SELECT * FROM `test_project:test_dataset.test_table` AS BQ_CONNECTOR_QUERY_ALIAS ) UNION ALL ( SELECT * FROM `test_project:test_dataset.test_table` AS BQ_CONNECTOR_QUERY_ALIAS ) ) AS SUBQUERY_2")
+    val unionQuery1 = UnionQuery(expressionConverter, expressionFactory, Seq(sourceQuery1, sourceQuery2), SUBQUERY_2_ALIAS)
+    val bigQuerySQLStatement1 = unionQuery1.getStatement(true)
+    assert(bigQuerySQLStatement1.toString == "( ( SELECT * FROM `test_project:test_dataset.test_table` AS BQ_CONNECTOR_QUERY_ALIAS ) UNION ALL ( SELECT * FROM `test_project:test_dataset.test_table` AS BQ_CONNECTOR_QUERY_ALIAS ) ) AS SUBQUERY_2")
+
+    val unionQuery2 = UnionQuery(expressionConverter, expressionFactory, Seq(sourceQuery1.copy(selectAttributes = true), sourceQuery2.copy(selectAttributes = true)), SUBQUERY_2_ALIAS)
+    val bigQuerySQLStatement2 = unionQuery2.getStatement(true)
+    assert(bigQuerySQLStatement2.toString == "( ( SELECT SCHOOLID , SCHOOLNAME FROM `test_project:test_dataset.test_table` AS BQ_CONNECTOR_QUERY_ALIAS ) UNION ALL ( SELECT SCHOOLID , SCHOOLNAME FROM `test_project:test_dataset.test_table` AS BQ_CONNECTOR_QUERY_ALIAS ) ) AS SUBQUERY_2")
   }
 
   test(testName = "getStatement with nonempty children and useAlias false") {

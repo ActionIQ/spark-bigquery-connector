@@ -90,7 +90,7 @@ abstract class BigQuerySQLQuery(
     .map(p => renameColumns(p, alias, expressionFactory))
 
   /** Convert processedProjections into a BigQuerySQLStatement */
-  val columns: Option[BigQuerySQLStatement] =
+  def columns: Option[BigQuerySQLStatement] =
     processedProjections.map(
       p => makeStatement(p.map(expressionConverter.convertStatement(_, columnSet)), ",")
     )
