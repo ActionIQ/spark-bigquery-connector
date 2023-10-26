@@ -94,6 +94,7 @@ public class SparkBigQueryConfig
     }
   }
 
+  public static final String PUSHDOWN_ENABLED = "pushdownEnabled";
   public static final String VIEWS_ENABLED_OPTION = "viewsEnabled";
   public static final String USE_AVRO_LOGICAL_TYPES_OPTION = "useAvroLogicalTypes";
   public static final String DATE_PARTITION_PARAM = "datePartition";

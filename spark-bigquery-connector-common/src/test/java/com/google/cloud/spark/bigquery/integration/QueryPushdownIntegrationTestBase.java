@@ -37,6 +37,19 @@ import org.junit.Test;
 public class QueryPushdownIntegrationTestBase extends SparkBigQueryIntegrationTestBase {
 
   @Test
+  /** EXE-2055 */
+  public void testApproxCountDistinct() {
+    Dataset<Row> df = readTestDataFromBigQuery("connector_dev", "connector_dev.dt");
+    df.createOrReplaceTempView("dt");
+    List<Row> results =
+        spark
+            .sql("select approx_count_distinct(id), approx_count_distinct(ts1) from dt")
+            .collectAsList();
+    assert (results.get(0).getLong(0) == 3);
+    assert (results.get(0).getLong(1) == 1);
+  }
+
+  @Test
   public void testStringFunctionExpressions() {
     Dataset<Row> df =
         spark

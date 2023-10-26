@@ -71,6 +71,10 @@ class BigQueryRelationProvider(
                                         sqlContext: SQLContext,
                                         parameters: Map[String, String],
                                         schema: Option[StructType] = None): BigQueryRelation = {
+    val pushdownEnabled = parameters.getOrElse(SparkBigQueryConfig.PUSHDOWN_ENABLED, "true").toBoolean
+    if (pushdownEnabled) {
+      BigQueryConnectorUtils.enablePushdownSession(sqlContext.sparkSession)
+    }
     val injector = getGuiceInjectorCreator().createGuiceInjector(sqlContext, parameters, schema)
     val opts = injector.getInstance(classOf[SparkBigQueryConfig])
     val bigQueryClient = injector.getInstance(classOf[BigQueryClient])

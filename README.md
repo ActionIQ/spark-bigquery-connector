@@ -1301,7 +1301,7 @@ Bump `revision` in `spark-bigquery-parent/pom.xml` to the next `-aiq#` version
 # Build
 This places artifacts in `~/.m2/repository/`
 ```
-./mvnw clean install
+./mvnw clean install -DskipTests
 ```
 
 # Unit Tests
