@@ -37,7 +37,6 @@ import org.junit.Test;
 public class QueryPushdownIntegrationTestBase extends SparkBigQueryIntegrationTestBase {
 
   @Test
-  /** EXE-2055 */
   public void testApproxCountDistinct() {
     Dataset<Row> df = readTestDataFromBigQuery("connector_dev", "connector_dev.dt");
     df.createOrReplaceTempView("dt");

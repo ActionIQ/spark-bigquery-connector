@@ -26,6 +26,7 @@ import static com.google.cloud.bigquery.connector.common.BigQueryConfigurationUt
 import static com.google.cloud.bigquery.connector.common.BigQueryConfigurationUtil.getRequiredOption;
 import static com.google.cloud.bigquery.connector.common.BigQueryUtil.firstPresent;
 import static com.google.cloud.bigquery.connector.common.BigQueryUtil.parseTableId;
+import static com.google.cloud.spark.bigquery.BigQueryConnectorUtils.enablePushdownSession;
 import static com.google.cloud.spark.bigquery.SparkBigQueryUtil.scalaMapToJavaMap;
 import static java.lang.String.format;
 
@@ -94,7 +95,7 @@ public class SparkBigQueryConfig
     }
   }
 
-  public static final String PUSHDOWN_ENABLED = "pushdownEnabled";
+  public static final String PUSHDOWN_ENABLED_OPTION = "pushdownEnabled";
   public static final String VIEWS_ENABLED_OPTION = "viewsEnabled";
   public static final String USE_AVRO_LOGICAL_TYPES_OPTION = "useAvroLogicalTypes";
   public static final String DATE_PARTITION_PARAM = "datePartition";
@@ -219,8 +220,37 @@ public class SparkBigQueryConfig
         spark.sparkContext().hadoopConfiguration(),
         customDefaults,
         spark.sparkContext().defaultParallelism(),
+        spark,
         spark.sqlContext().conf(),
         spark.version(),
+        schema,
+        tableIsMandatory);
+  }
+
+  private static SparkBigQueryConfig from(
+      Map<String, String> optionsInput,
+      ImmutableMap<String, String> originalGlobalOptions,
+      Configuration hadoopConfiguration,
+      ImmutableMap<String, String> customDefaults,
+      int defaultParallelism,
+      SparkSession spark,
+      SQLConf sqlConf,
+      String sparkVersion,
+      Optional<StructType> schema,
+      boolean tableIsMandatory) {
+    // EXE-2032: default to true for pushdown
+    if (getAnyBooleanOption(originalGlobalOptions, optionsInput, PUSHDOWN_ENABLED_OPTION, true)) {
+      enablePushdownSession(spark);
+    }
+
+    return SparkBigQueryConfig.from(
+        optionsInput,
+        originalGlobalOptions,
+        hadoopConfiguration,
+        customDefaults,
+        defaultParallelism,
+        sqlConf,
+        sparkVersion,
         schema,
         tableIsMandatory);
   }
