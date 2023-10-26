@@ -1301,7 +1301,7 @@ Bump `revision` in `spark-bigquery-parent/pom.xml` to the next `-aiq#` version
 # Build
 This places artifacts in `~/.m2/repository/`
 ```
-./mvnw clean install
+./mvnw clean install -DskipTests
 ```
 
 # Unit Tests
@@ -1313,13 +1313,13 @@ Run all tests except acceptance test and integration tests
 # Integration Tests
 To run integration test with `aiq-dev` BigQuery instance, download the service account credentials to a local
 file, then run
-```bash
+```
 export GOOGLE_APPLICATION_CREDENTIALS=<path_to_the_file>
 export GOOGLE_CLOUD_PROJECT=aiq-dev
 ```
 
 Run integration tests:
-```bash
+```
 # make sure to do this after updating tests - for some reason failsafe:integration-test doesn't compile tests before running
 ./mvnw install -Pintegration -DskipTests
 

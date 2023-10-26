@@ -41,6 +41,12 @@ abstract class SparkExpressionConverter {
         // Take only the first child, as all of the functions below have only one.
         expression.children.headOption.flatMap(agg_fun => {
           Option(agg_fun match {
+            case _: HyperLogLogPlusPlus =>
+              // NOTE: We are not passing through the other parameters in Spark's HLL
+              // like mutableAggBufferOffset and inputAggBufferOffset
+              ConstantString("APPROX_COUNT_DISTINCT") +
+                blockStatement(convertStatements(fields, agg_fun.children: _*))
+
             case _: Average | _: Corr | _: CovPopulation | _: CovSample | _: Count |
                  _: Max | _: Min | _: Sum | _: StddevPop | _: StddevSamp |
                  _: VariancePop | _: VarianceSamp =>
