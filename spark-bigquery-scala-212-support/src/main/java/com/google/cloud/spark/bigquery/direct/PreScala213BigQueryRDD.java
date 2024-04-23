@@ -135,7 +135,7 @@ class PreScala213BigQueryRDD extends RDD<InternalRow> {
         context,
         new ScalaIterator<InternalRow>(
             new InternalRowIterator(readRowsResponseIterator, converter, readRowsHelper, tracer)),
-            scala.Option.empty());
+        scala.Option.empty());
   }
 
   @Override
