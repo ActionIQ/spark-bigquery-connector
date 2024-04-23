@@ -51,6 +51,7 @@ public class LoggingBigQueryStorageReadRowsTracer implements BigQueryStorageRead
     this.logIntervalPowerOf2 = logIntervalPowerOf2;
   }
 
+  @Override
   public void querySubmissionTime(long querySubmittedAt) {
     this.querySubmissionTime = querySubmittedAt;
   }
