@@ -34,6 +34,10 @@ final class DurationTimer implements Serializable {
     start = System.nanoTime();
   }
 
+  public void start(long timestamp) {
+    start = timestamp;
+  }
+
   public void finish() {
     long now = System.nanoTime();
     if (start != Long.MIN_VALUE) {
