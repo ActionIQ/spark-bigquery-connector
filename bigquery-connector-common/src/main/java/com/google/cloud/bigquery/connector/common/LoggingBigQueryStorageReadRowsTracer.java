@@ -37,15 +37,24 @@ public class LoggingBigQueryStorageReadRowsTracer implements BigQueryStorageRead
   final DurationTimer parseTime = new DurationTimer();
   final DurationTimer sparkTime = new DurationTimer();
   final DurationTimer serviceTime = new DurationTimer();
+
+  final DurationTimer warehouseQueryLatency = new DurationTimer();
   Instant endTime;
   long rows = 0;
   long bytes = 0;
   // For confirming data is logged.
   long linesLogged = 0;
 
+  long querySubmissionTime = 0;
+
   LoggingBigQueryStorageReadRowsTracer(String streamName, int logIntervalPowerOf2) {
     this.streamName = streamName;
     this.logIntervalPowerOf2 = logIntervalPowerOf2;
+  }
+
+  @Override
+  public void querySubmissionTime(long querySubmittedAt) {
+    this.querySubmissionTime = querySubmittedAt;
   }
 
   @Override
@@ -55,7 +64,9 @@ public class LoggingBigQueryStorageReadRowsTracer implements BigQueryStorageRead
 
   @Override
   public void rowsParseStarted() {
+    warehouseQueryLatency.start(querySubmissionTime);
     parseTime.start();
+    warehouseQueryLatency.finish();
   }
 
   @Override
@@ -131,6 +142,12 @@ public class LoggingBigQueryStorageReadRowsTracer implements BigQueryStorageRead
     jsonObject.addProperty("Rows", rows);
     jsonObject.addProperty("I/O time", serviceTime.getAccumulatedTime().toMillis());
     log.info("Tracer Logs:{}", new Gson().toJson(jsonObject));
+    log.info(
+        "Statistics:"
+            + " warehouse_read_latency={} ms warehouse_query_latency={} ms"
+            + " data_source=bigquery",
+        parseTime.getAccumulatedTime().toMillis(),
+        warehouseQueryLatency.getAccumulatedTime().toMillis());
     linesLogged++;
   }
 
