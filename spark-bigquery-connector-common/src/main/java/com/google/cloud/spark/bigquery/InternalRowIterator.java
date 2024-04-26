@@ -51,6 +51,7 @@ public class InternalRowIterator implements Iterator<InternalRow> {
       bigQueryStorageReadRowsTracer.readRowsResponseRequested();
       if (!readRowsResponses.hasNext()) {
         try {
+          bigQueryStorageReadRowsTracer.logWarehouseLatency();
           bigQueryStorageReadRowsTracer.finished();
         } catch (Exception e) {
           log.debug("Failure finishing tracer. stream:{} exception:{}", readRowsHelper, e);

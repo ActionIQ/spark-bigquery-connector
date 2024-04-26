@@ -46,14 +46,16 @@ public class LoggingBigQueryStorageReadRowsTracer implements BigQueryStorageRead
 
   long querySubmissionTime = 0;
 
+  long warehouseLogged = 0;
+
   LoggingBigQueryStorageReadRowsTracer(String streamName, int logIntervalPowerOf2) {
     this.streamName = streamName;
     this.logIntervalPowerOf2 = logIntervalPowerOf2;
   }
 
   @Override
-  public void querySubmissionTime(long querySubmittedAt) {
-    this.querySubmissionTime = querySubmittedAt;
+  public void querySubmissionTime(long querySubmissionTime) {
+    this.querySubmissionTime = querySubmissionTime;
   }
 
   @Override
@@ -89,6 +91,19 @@ public class LoggingBigQueryStorageReadRowsTracer implements BigQueryStorageRead
   public void finished() {
     endTime = Instant.now();
     logData();
+  }
+
+  public void logWarehouseLatency() {
+    if (warehouseLogged == 0) {
+      log.info(
+          "Statistics:"
+              + " warehouse_read_latency={} ms warehouse_query_latency={} ms"
+              + " data_source=bigquery number_of_samples={}",
+          average(parseTime).toMillis(),
+          average(warehouseQueryLatency).toMillis(),
+          parseTime.getSamples());
+      warehouseLogged = warehouseLogged + 1;
+    }
   }
 
   private static Duration average(DurationTimer durationTimer) {
@@ -141,12 +156,6 @@ public class LoggingBigQueryStorageReadRowsTracer implements BigQueryStorageRead
     jsonObject.addProperty("Rows", rows);
     jsonObject.addProperty("I/O time", serviceTime.getAccumulatedTime().toMillis());
     log.info("Tracer Logs:{}", new Gson().toJson(jsonObject));
-    log.info(
-        "Statistics:"
-            + " warehouse_read_latency={} ms warehouse_query_latency={} ms"
-            + " data_source=bigquery",
-        parseTime.getAccumulatedTime().toMillis(),
-        warehouseQueryLatency.getAccumulatedTime().toMillis());
     linesLogged++;
   }
 
