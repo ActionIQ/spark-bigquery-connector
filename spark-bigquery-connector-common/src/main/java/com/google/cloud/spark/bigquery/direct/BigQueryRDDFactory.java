@@ -88,7 +88,7 @@ public class BigQueryRDDFactory {
     log.info("Materializing the following sql query to a BigQuery table: {}", sql);
     sqlContext
         .sparkContext()
-        .setLocalProperty("querySubmissionTime", String.valueOf(System.nanoTime()));
+        .setLocalProperty("querySubmissionTime", String.valueOf(java.time.Instant.now()));
 
     TableInfo actualTable =
         bigQueryClient.materializeQueryToTable(

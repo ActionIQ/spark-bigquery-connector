@@ -29,7 +29,7 @@ import java.io.Serializable;
  */
 public interface BigQueryStorageReadRowsTracer extends Serializable {
   /** Record Query Submission time */
-  void querySubmissionTime(long querySubmissionTime);
+  void querySubmissionTime(String querySubmissionTime);
   /** Record stream initialization time. */
   void startStream();
   /** Indicates a fully decoded element has been requested by spark (i.e. Arrow RecordBatch). */
@@ -50,6 +50,7 @@ public interface BigQueryStorageReadRowsTracer extends Serializable {
   /** Called when the next batch is needed from spark. */
   void nextBatchNeeded();
 
+  /** Log AIQ bigquery connector latency */
   void logWarehouseLatency();
 
   /**

@@ -129,7 +129,7 @@ class Scala213BigQueryRDD extends RDD<InternalRow> {
               Optional.of(schema),
               Optional.of(tracer));
     }
-    tracer.querySubmissionTime(Long.valueOf(context.getLocalProperty("querySubmissionTime")));
+    tracer.querySubmissionTime(context.getLocalProperty("querySubmissionTime"));
 
     return new InterruptibleIterator<InternalRow>(
         context,

@@ -75,7 +75,6 @@ class PreScala213BigQueryRDD extends RDD<InternalRow> {
         sparkContext,
         (Seq<Dependency<?>>) Seq$.MODULE$.<Dependency<?>>newBuilder().result(),
         scala.reflect.ClassTag$.MODULE$.apply(InternalRow.class));
-
     this.partitions = parts;
     this.readSession = readSession;
     this.columnsInOrder = columnsInOrder;
@@ -129,7 +128,7 @@ class PreScala213BigQueryRDD extends RDD<InternalRow> {
               Optional.of(schema),
               Optional.of(tracer));
     }
-    tracer.querySubmissionTime(Long.valueOf(context.getLocalProperty("querySubmissionTime")));
+    tracer.querySubmissionTime(context.getLocalProperty("querySubmissionTime"));
 
     return new InterruptibleIterator<InternalRow>(
         context,
