@@ -86,13 +86,11 @@ public class LoggingBigQueryStorageReadRowsTracer implements BigQueryStorageRead
   @Override
   public void rowsParseStarted() {
     parseTime.start();
-    log.info("rowsParseStarted {}!", streamName);
     recordWarehouseQueryLatency();
   }
 
   @Override
   public void rowsParseFinished(long rows) {
-    log.info("rowsParseFinished {}!", streamName);
     this.rows += rows;
     parseTime.finish();
     recordWarehouseReadLatency();
