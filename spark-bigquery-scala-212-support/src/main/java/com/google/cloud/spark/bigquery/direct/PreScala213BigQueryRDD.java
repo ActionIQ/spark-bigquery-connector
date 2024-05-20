@@ -133,7 +133,8 @@ class PreScala213BigQueryRDD extends RDD<InternalRow> {
     return new InterruptibleIterator<InternalRow>(
         context,
         new ScalaIterator<InternalRow>(
-            new InternalRowIterator(readRowsResponseIterator, converter, readRowsHelper, tracer)),
+            new InternalRowIterator(
+                readRowsResponseIterator, converter, readRowsHelper, tracer, context)),
         scala.Option.empty());
   }
 

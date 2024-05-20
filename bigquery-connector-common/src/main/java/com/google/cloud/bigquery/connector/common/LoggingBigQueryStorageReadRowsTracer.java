@@ -21,7 +21,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
-import org.apache.spark.SparkContext;
+import org.apache.spark.TaskContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -113,7 +113,7 @@ public class LoggingBigQueryStorageReadRowsTracer implements BigQueryStorageRead
     logData();
   }
 
-  public void logWarehouseLatency() {
+  public void logWarehouseLatency(TaskContext context) {
     if (warehouseLogged == 0) {
       HashMap<String, String> tags = new HashMap<>();
       tags.put("warehouse_read_latency_millis", String.valueOf(warehouseReadLatency));
@@ -125,7 +125,7 @@ public class LoggingBigQueryStorageReadRowsTracer implements BigQueryStorageRead
       tags.put("first_row_read_at", firstRowReadAt.toString());
       tags.put("last_row_read_at", lastRowReadAt.toString());
 
-      SparkContext.emitLog(tags);
+      context.emitLog(tags);
       warehouseLogged = warehouseLogged + 1;
     }
   }
