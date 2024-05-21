@@ -126,7 +126,7 @@
         <!-- checkstyle
         <checkstyle.header.file>${reactor.project.basedir}/java.header</checkstyle.header.file>
         -->
-        <spark.version>3-3-2-aiq88</spark.version>
+        <spark.version>3-3-2-aiq89</spark.version>
         <scala.binary.version>2.12</scala.binary.version>
         <scala.patch.version>15</scala.patch.version>
     </properties>
