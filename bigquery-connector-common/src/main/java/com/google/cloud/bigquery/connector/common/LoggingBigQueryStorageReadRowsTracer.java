@@ -124,6 +124,7 @@ public class LoggingBigQueryStorageReadRowsTracer implements BigQueryStorageRead
       tags.put("query_submitted_at", querySubmissionTime.toString());
       tags.put("first_row_read_at", firstRowReadAt.toString());
       tags.put("last_row_read_at", lastRowReadAt.toString());
+      tags.put("row_count", String.valueOf(rows));
 
       context.emitLog(tags);
       warehouseLogged = warehouseLogged + 1;
