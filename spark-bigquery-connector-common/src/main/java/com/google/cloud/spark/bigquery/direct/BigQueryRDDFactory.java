@@ -86,6 +86,8 @@ public class BigQueryRDDFactory {
    */
   public RDD<InternalRow> buildScanFromSQL(String sql) {
     log.info("Materializing the following sql query to a BigQuery table: {}", sql);
+    // pass a date as string in DateTimeFormatter ISO_INSTANT format via sparkContext
+    // the string will be decoded to Java Instant downstream in Executors
     sqlContext
         .sparkContext()
         .setLocalProperty("querySubmissionTime", String.valueOf(java.time.Instant.now()));
