@@ -38,6 +38,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Streams;
 import java.lang.reflect.Constructor;
+import java.time.Instant;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -90,7 +91,7 @@ public class BigQueryRDDFactory {
     // the string will be decoded to Java Instant downstream in Executors
     sqlContext
         .sparkContext()
-        .setLocalProperty("querySubmissionTime", String.valueOf(java.time.Instant.now()));
+        .setLocalProperty("querySubmissionTime", String.valueOf(Instant.now()));
 
     TableInfo actualTable =
         bigQueryClient.materializeQueryToTable(
