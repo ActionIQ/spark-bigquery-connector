@@ -21,6 +21,7 @@ import com.google.cloud.bigquery.connector.common.ReadRowsHelper;
 import com.google.cloud.bigquery.storage.v1.ReadRowsResponse;
 import com.google.common.collect.ImmutableList;
 import java.util.Iterator;
+import org.apache.spark.TaskContext;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,6 +32,7 @@ public class InternalRowIterator implements Iterator<InternalRow> {
   private ReadRowsResponseToInternalRowIteratorConverter converter;
   private ReadRowsHelper readRowsHelper;
   private final BigQueryStorageReadRowsTracer bigQueryStorageReadRowsTracer;
+  private TaskContext context;
   private Iterator<InternalRow> rows = ImmutableList.<InternalRow>of().iterator();
   private static final Logger log = LoggerFactory.getLogger(InternalRowIterator.class);
 
@@ -38,11 +40,13 @@ public class InternalRowIterator implements Iterator<InternalRow> {
       Iterator<ReadRowsResponse> readRowsResponses,
       ReadRowsResponseToInternalRowIteratorConverter converter,
       ReadRowsHelper readRowsHelper,
-      BigQueryStorageReadRowsTracer bigQueryStorageReadRowsTracer) {
+      BigQueryStorageReadRowsTracer bigQueryStorageReadRowsTracer,
+      TaskContext context) {
     this.readRowsResponses = readRowsResponses;
     this.converter = converter;
     this.readRowsHelper = readRowsHelper;
     this.bigQueryStorageReadRowsTracer = bigQueryStorageReadRowsTracer;
+    this.context = context;
   }
 
   @Override
@@ -51,6 +55,7 @@ public class InternalRowIterator implements Iterator<InternalRow> {
       bigQueryStorageReadRowsTracer.readRowsResponseRequested();
       if (!readRowsResponses.hasNext()) {
         try {
+          bigQueryStorageReadRowsTracer.logWarehouseLatency(context);
           bigQueryStorageReadRowsTracer.finished();
         } catch (Exception e) {
           log.debug("Failure finishing tracer. stream:{} exception:{}", readRowsHelper, e);
