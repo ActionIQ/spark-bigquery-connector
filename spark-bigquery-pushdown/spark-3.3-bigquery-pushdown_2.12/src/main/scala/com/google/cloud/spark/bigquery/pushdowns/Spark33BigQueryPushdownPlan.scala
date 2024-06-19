@@ -20,11 +20,13 @@ import com.google.cloud.spark.bigquery.pushdowns.SparkBigQueryPushdownUtil.doExe
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions.Attribute
-import org.apache.spark.sql.execution.SparkPlan
+import org.apache.spark.sql.execution.{SQLPlan, SparkPlan}
 
 /** BigQueryPlan, with RDD defined by custom query. */
 case class Spark33BigQueryPushdownPlan(output: Seq[Attribute], rdd: RDD[InternalRow], sqlString: String)
-  extends SparkPlan {
+  extends SparkPlan with SQLPlan {
+
+  override def sql: String = sqlString
 
   override def children: Seq[SparkPlan] = Nil
 
