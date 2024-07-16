@@ -24,6 +24,7 @@ import java.util.HashMap;
 import org.apache.spark.TaskContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import scala.Predef;
 import scala.collection.JavaConverters;
 
 /**
@@ -128,8 +129,7 @@ public class LoggingBigQueryStorageReadRowsTracer implements BigQueryStorageRead
       tags.put("row_count", String.valueOf(rows));
 
       context.emitMetricsLog(
-          JavaConverters.mapAsScalaMap(tags)
-              .toMap(scala.Predef$.MODULE$.<scala.Tuple2<String, String>>conforms()));
+          JavaConverters.mapAsScalaMapConverter(tags).asScala().toMap(Predef.$conforms()));
       warehouseLogged = warehouseLogged + 1;
     }
   }
