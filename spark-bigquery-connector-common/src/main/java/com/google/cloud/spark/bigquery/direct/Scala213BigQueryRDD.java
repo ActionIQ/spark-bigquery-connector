@@ -36,6 +36,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
+import org.apache.spark.DataSourceTelemetry;
 import org.apache.spark.Dependency;
 import org.apache.spark.InterruptibleIterator;
 import org.apache.spark.Partition;
@@ -44,6 +45,7 @@ import org.apache.spark.TaskContext;
 import org.apache.spark.rdd.RDD;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.types.StructType;
+import scala.Option;
 import scala.collection.immutable.Seq;
 import scala.collection.immutable.Seq$;
 
@@ -136,7 +138,8 @@ class Scala213BigQueryRDD extends RDD<InternalRow> {
         new ScalaIterator<InternalRow>(
             new InternalRowIterator(
                 readRowsResponseIterator, converter, readRowsHelper, tracer, context)),
-        scala.Option.empty());
+        new DataSourceTelemetry(
+            false, Option.empty(), Option.empty(), Option.empty(), Option.empty(), Option.empty()));
   }
 
   @Override
