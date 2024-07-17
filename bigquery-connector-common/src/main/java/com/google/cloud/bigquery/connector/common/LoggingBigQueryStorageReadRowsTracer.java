@@ -19,13 +19,8 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
-import org.apache.spark.TaskContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import scala.Predef;
-import scala.collection.JavaConverters;
 
 /**
  * Implementation of {@link BigQueryStorageReadRowsTracer} that accumulates and logs times
@@ -47,37 +42,10 @@ public class LoggingBigQueryStorageReadRowsTracer implements BigQueryStorageRead
   long bytes = 0;
   // For confirming data is logged.
   long linesLogged = 0;
-  Instant querySubmissionTime = Instant.now();
-  Instant firstRowReadAt = Instant.MAX;
-  Instant lastRowReadAt = Instant.MIN;
-  long warehouseReadLatency = 0;
-  long warehouseQueryLatency = 0;
-  long warehouseLogged = 0;
 
   LoggingBigQueryStorageReadRowsTracer(String streamName, int logIntervalPowerOf2) {
     this.streamName = streamName;
     this.logIntervalPowerOf2 = logIntervalPowerOf2;
-  }
-
-  private void recordWarehouseQueryLatency() {
-    firstRowReadAt = (firstRowReadAt.compareTo(Instant.now()) < 0) ? firstRowReadAt : Instant.now();
-    warehouseQueryLatency =
-        Math.max(
-            Instant.now().toEpochMilli() - querySubmissionTime.toEpochMilli(),
-            warehouseQueryLatency);
-  }
-
-  private void recordWarehouseReadLatency() {
-    lastRowReadAt = (lastRowReadAt.compareTo(Instant.now()) > 0) ? lastRowReadAt : Instant.now();
-    warehouseReadLatency =
-        Math.max(
-            Instant.now().toEpochMilli() - firstRowReadAt.toEpochMilli(), warehouseReadLatency);
-  }
-
-  @Override
-  public void querySubmissionTime(String querySubmissionTime) {
-    this.querySubmissionTime =
-        Instant.from(DateTimeFormatter.ISO_INSTANT.parse(querySubmissionTime));
   }
 
   @Override
@@ -88,14 +56,12 @@ public class LoggingBigQueryStorageReadRowsTracer implements BigQueryStorageRead
   @Override
   public void rowsParseStarted() {
     parseTime.start();
-    recordWarehouseQueryLatency();
   }
 
   @Override
   public void rowsParseFinished(long rows) {
     this.rows += rows;
     parseTime.finish();
-    recordWarehouseReadLatency();
   }
 
   @Override
@@ -113,25 +79,6 @@ public class LoggingBigQueryStorageReadRowsTracer implements BigQueryStorageRead
   public void finished() {
     endTime = Instant.now();
     logData();
-  }
-
-  public void logWarehouseLatency(TaskContext context) {
-    if (warehouseLogged == 0) {
-      HashMap<String, String> tags = new HashMap<>();
-      tags.put("warehouse_read_latency_millis", String.valueOf(warehouseReadLatency));
-      tags.put("warehouse_query_latency_millis", String.valueOf(warehouseQueryLatency));
-      tags.put("data_source", "bigquery");
-      tags.put("number_of_samples", String.valueOf(parseTime.getSamples()));
-      tags.put("stream_name", streamName);
-      tags.put("query_submitted_at", querySubmissionTime.toString());
-      tags.put("first_row_read_at", firstRowReadAt.toString());
-      tags.put("last_row_read_at", lastRowReadAt.toString());
-      tags.put("row_count", String.valueOf(rows));
-
-      context.emitMetricsLog(
-          JavaConverters.mapAsScalaMapConverter(tags).asScala().toMap(Predef.$conforms()));
-      warehouseLogged = warehouseLogged + 1;
-    }
   }
 
   private static Duration average(DurationTimer durationTimer) {

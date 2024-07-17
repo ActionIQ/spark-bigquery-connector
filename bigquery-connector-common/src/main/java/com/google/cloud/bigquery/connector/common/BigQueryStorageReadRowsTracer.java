@@ -16,7 +16,6 @@
 package com.google.cloud.bigquery.connector.common;
 
 import java.io.Serializable;
-import org.apache.spark.TaskContext;
 
 /**
  * Interface to capture tracing in information for the BigQuery connector. Modelled after {@link
@@ -29,8 +28,6 @@ import org.apache.spark.TaskContext;
  * <p>For internal use only.
  */
 public interface BigQueryStorageReadRowsTracer extends Serializable {
-  /** Record Query Submission time */
-  void querySubmissionTime(String querySubmissionTime);
   /** Record stream initialization time. */
   void startStream();
   /** Indicates a fully decoded element has been requested by spark (i.e. Arrow RecordBatch). */
@@ -50,9 +47,6 @@ public interface BigQueryStorageReadRowsTracer extends Serializable {
 
   /** Called when the next batch is needed from spark. */
   void nextBatchNeeded();
-
-  /** Log AIQ bigquery connector latency */
-  void logWarehouseLatency(TaskContext context);
 
   /**
    * Must only be called before any calls are made to the tracer. This is intended for cases when

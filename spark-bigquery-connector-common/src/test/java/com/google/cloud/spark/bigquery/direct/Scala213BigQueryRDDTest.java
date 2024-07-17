@@ -37,7 +37,6 @@ public class Scala213BigQueryRDDTest {
             null /* bigQueryReadClientFactory */,
             null /* bigQueryTracerFactory */,
             null /* options */,
-            null /* dataSourceTelemetryMetrics */,
             sparkSession.sqlContext());
     RDD<InternalRow> result =
         factory.createRDD(
