@@ -69,21 +69,18 @@ public class BigQueryRDDFactory implements DataSourceTelemetryHelpers {
   private final BigQueryClientFactory bigQueryReadClientFactory;
   private final BigQueryTracerFactory bigQueryTracerFactory;
   private final SQLContext sqlContext;
-  private final DataSourceTelemetry dataSourceTelemetryMetrics;
 
   public BigQueryRDDFactory(
       BigQueryClient bigQueryClient,
       BigQueryClientFactory bigQueryReadClientFactory,
       BigQueryTracerFactory bigQueryTracerFactory,
       SparkBigQueryConfig options,
-      DataSourceTelemetry dataSourceTelemetryMetrics,
       SQLContext sqlContext) {
     this.bigQueryClient = bigQueryClient;
     this.options = options;
     this.bigQueryReadClientFactory = bigQueryReadClientFactory;
     this.bigQueryTracerFactory = bigQueryTracerFactory;
     this.sqlContext = sqlContext;
-    this.dataSourceTelemetryMetrics = dataSourceTelemetryMetrics;
   }
 
   /**
@@ -93,6 +90,10 @@ public class BigQueryRDDFactory implements DataSourceTelemetryHelpers {
   public RDD<InternalRow> buildScanFromSQL(String sql) {
     log.info(
         logEventNameTagger("Materializing the following sql query to a BigQuery table: {}"), sql);
+
+    DataSourceTelemetry dataSourceTelemetryMetrics =
+        DataSourceTelemetryHelpers.createDataSourceTelemetry(
+            sqlContext.sparkContext(), Option.empty());
 
     sqlContext
         .sparkContext()
@@ -138,7 +139,8 @@ public class BigQueryRDDFactory implements DataSourceTelemetryHelpers {
             actualTable.getTableId(),
             readSessionCreator,
             requiredColumns.toArray(new String[0]),
-            "");
+            "",
+            dataSourceTelemetryMetrics);
   }
 
   // Creates BigQueryRDD from the BigQuery table that is passed in. Note that we return RDD<?>
@@ -148,7 +150,8 @@ public class BigQueryRDDFactory implements DataSourceTelemetryHelpers {
       TableId tableId,
       ReadSessionCreator readSessionCreator,
       String[] requiredColumns,
-      String filter) {
+      String filter,
+      DataSourceTelemetry dataSourceTelemetryMetrics) {
     ReadSessionResponse readSessionResponse =
         readSessionCreator.create(
             tableId, ImmutableList.copyOf(requiredColumns), BigQueryUtil.emptyIfNeeded(filter));
@@ -183,7 +186,8 @@ public class BigQueryRDDFactory implements DataSourceTelemetryHelpers {
         requiredColumns,
         options,
         bigQueryReadClientFactory,
-        bigQueryTracerFactory);
+        bigQueryTracerFactory,
+        dataSourceTelemetryMetrics);
   }
 
   // Moved from BigQueryRDD.scanTable
@@ -196,7 +200,8 @@ public class BigQueryRDDFactory implements DataSourceTelemetryHelpers {
       String[] columnsInOrder,
       SparkBigQueryConfig options,
       BigQueryClientFactory bigQueryClientFactory,
-      BigQueryTracerFactory bigQueryTracerFactory) {
+      BigQueryTracerFactory bigQueryTracerFactory,
+      DataSourceTelemetry dataSourceTelemetryMetrics) {
     // Unfortunately we need to use reflection here due to a cyclic dependency issue, and the fact
     // that RDD constructor dependencies are different between Scala 2.12 and Scala 2.13. In Scala
     // 2.13 `scala.collection.Seq` is mapped to `scala.collection.immutable.Seq` and this is why we

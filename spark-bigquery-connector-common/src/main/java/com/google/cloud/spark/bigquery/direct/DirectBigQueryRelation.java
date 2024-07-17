@@ -92,13 +92,7 @@ public class DirectBigQueryRelation extends BigQueryRelation
     this.defaultTableDefinition = table.getDefinition();
     this.bigQueryRDDFactory =
         new BigQueryRDDFactory(
-            bigQueryClient,
-            bigQueryReadClientFactory,
-            bigQueryTracerFactory,
-            options,
-            DataSourceTelemetryHelpers.createDataSourceTelemetry(
-                sqlContext.sparkContext(), Option.empty()),
-            sqlContext);
+            bigQueryClient, bigQueryReadClientFactory, bigQueryTracerFactory, options, sqlContext);
   }
 
   @Override
@@ -159,7 +153,12 @@ public class DirectBigQueryRelation extends BigQueryRelation
 
     return (RDD<Row>)
         bigQueryRDDFactory.createRddFromTable(
-            getTableId(), readSessionCreator, requiredColumns, compiledFilter);
+            getTableId(),
+            readSessionCreator,
+            requiredColumns,
+            compiledFilter,
+            DataSourceTelemetryHelpers.createDataSourceTelemetry(
+                sqlContext.sparkContext(), Option.empty()));
   }
 
   @Override
