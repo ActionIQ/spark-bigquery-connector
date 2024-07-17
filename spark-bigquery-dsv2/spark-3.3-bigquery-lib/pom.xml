@@ -34,11 +34,5 @@
       <version>${spark.version}</version>
       <scope>test</scope>
     </dependency>
-    <dependency>
-      <groupId>org.apache.spark</groupId>
-      <artifactId>spark-sql_2.12</artifactId>
-      <version>3-3-2-aiq2099</version>
-      <scope>compile</scope>
-    </dependency>
   </dependencies>
 </project>

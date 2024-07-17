@@ -126,7 +126,7 @@ class BigQueryRelationProvider(getGuiceInjectorCreator: () => GuiceInjectorCreat
 
   override def dataSourceType(): String = "spark_connector"
 
-  override def dataWarehouseName(parameters: Map[String, String]): String = shortName()
+  override def dataWarehouseName(parameters: Map[String, String]): String = shortName
 }
 
 // externalized to be used by tests
