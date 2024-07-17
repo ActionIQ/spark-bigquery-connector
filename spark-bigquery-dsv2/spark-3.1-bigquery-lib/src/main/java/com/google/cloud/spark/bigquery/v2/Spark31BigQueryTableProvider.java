@@ -27,11 +27,12 @@ import org.apache.spark.sql.connector.catalog.TableProvider;
 import org.apache.spark.sql.connector.expressions.Transform;
 import org.apache.spark.sql.sources.BaseRelation;
 import org.apache.spark.sql.sources.CreatableRelationProvider;
+import org.apache.spark.sql.sources.DataSourceTelemetryProvider;
 import org.apache.spark.sql.types.StructType;
 import org.apache.spark.sql.util.CaseInsensitiveStringMap;
 
 public class Spark31BigQueryTableProvider extends BaseBigQuerySource
-    implements TableProvider, CreatableRelationProvider {
+    implements TableProvider, CreatableRelationProvider, DataSourceTelemetryProvider {
 
   private static final Transform[] EMPTY_TRANSFORM_ARRAY = {};
 
@@ -61,7 +62,20 @@ public class Spark31BigQueryTableProvider extends BaseBigQuerySource
       SaveMode mode,
       scala.collection.immutable.Map<String, String> parameters,
       Dataset<Row> data) {
+
+    initializeRelationTelemetry(sqlContext, parameters);
+
     return new CreatableRelationProviderHelper()
         .createRelation(sqlContext, mode, parameters, data, ImmutableMap.of());
+  }
+
+  @Override
+  public String dataSourceType() {
+    return "spark_connector";
+  }
+
+  @Override
+  public String dataWarehouseName(scala.collection.immutable.Map<String, String> parameters) {
+    return shortName();
   }
 }
