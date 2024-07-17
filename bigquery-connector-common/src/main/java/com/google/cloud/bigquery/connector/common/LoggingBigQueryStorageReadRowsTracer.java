@@ -19,6 +19,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import java.time.Duration;
 import java.time.Instant;
+import org.apache.spark.DataSourceTelemetryHelpers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,7 +27,8 @@ import org.slf4j.LoggerFactory;
  * Implementation of {@link BigQueryStorageReadRowsTracer} that accumulates and logs times
  * periodically.
  */
-public class LoggingBigQueryStorageReadRowsTracer implements BigQueryStorageReadRowsTracer {
+public class LoggingBigQueryStorageReadRowsTracer
+    implements BigQueryStorageReadRowsTracer, DataSourceTelemetryHelpers {
   private static final Logger log =
       LoggerFactory.getLogger(LoggingBigQueryStorageReadRowsTracer.class);
 
@@ -130,7 +132,7 @@ public class LoggingBigQueryStorageReadRowsTracer implements BigQueryStorageRead
     jsonObject.addProperty("Bytes", bytes);
     jsonObject.addProperty("Rows", rows);
     jsonObject.addProperty("I/O time", serviceTime.getAccumulatedTime().toMillis());
-    log.info("Tracer Logs:{}", new Gson().toJson(jsonObject));
+    log.info(logEventNameTagger("Tracer Logs:{}"), new Gson().toJson(jsonObject));
     linesLogged++;
   }
 
