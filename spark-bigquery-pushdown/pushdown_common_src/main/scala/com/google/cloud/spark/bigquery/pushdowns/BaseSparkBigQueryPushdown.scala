@@ -13,7 +13,6 @@ abstract class BaseSparkBigQueryPushdown extends SparkBigQueryPushdown {
       sparkExpressionFactory, sparkPlanFactory)
     val bigQueryStrategy = createBigQueryStrategy(
       sparkExpressionConverter, sparkExpressionFactory, sparkPlanFactory)
-    // Used here to indicate downstream that the BigQuery PushDown Strategy is enabled
     session.sparkContext.dataSourceTelemetry.checkForPushDownFailures.set(true)
     SparkBigQueryPushdownUtil.enableBigQueryStrategy(session, bigQueryStrategy)
   }
