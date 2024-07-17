@@ -35,4 +35,8 @@ public class BigQueryPartition implements Partition {
   public int index() {
     return index;
   }
+
+  public String toPartitionString() {
+    return stream + "_" + index;
+  }
 }

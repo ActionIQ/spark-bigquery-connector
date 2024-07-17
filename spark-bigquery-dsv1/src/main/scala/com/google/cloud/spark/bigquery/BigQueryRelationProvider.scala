@@ -31,13 +31,13 @@ import org.apache.spark.sql.{DataFrame, SQLContext, SaveMode}
 
 import scala.collection.JavaConverters._
 
-class BigQueryRelationProvider(
-                                getGuiceInjectorCreator: () => GuiceInjectorCreator)
+class BigQueryRelationProvider(getGuiceInjectorCreator: () => GuiceInjectorCreator)
   extends RelationProvider
     with CreatableRelationProvider
     with SchemaRelationProvider
     with DataSourceRegister
-    with StreamSinkProvider {
+    with StreamSinkProvider
+    with DataSourceTelemetryProvider {
 
   BigQueryUtilScala.validateScalaVersionCompatibility
 
@@ -68,9 +68,10 @@ class BigQueryRelationProvider(
   }
 
   protected def createRelationInternal(
-                                        sqlContext: SQLContext,
-                                        parameters: Map[String, String],
-                                        schema: Option[StructType] = None): BigQueryRelation = {
+    sqlContext: SQLContext,
+    parameters: Map[String, String],
+    schema: Option[StructType] = None
+  ): BigQueryRelation = {
     val injector = getGuiceInjectorCreator().createGuiceInjector(sqlContext, parameters, schema)
     val opts = injector.getInstance(classOf[SparkBigQueryConfig])
     val bigQueryClient = injector.getInstance(classOf[BigQueryClient])
@@ -80,6 +81,9 @@ class BigQueryRelationProvider(
     val bigQueryTracerFactory = injector.getInstance(classOf[LoggingBigQueryTracerFactory])
     val table = Option(tableInfo)
       .getOrElse(sys.error(s"Table $tableName not found"))
+
+    initializeRelationTelemetry(sqlContext, parameters)
+
     table.getDefinition[TableDefinition].getType match {
       case TABLE | EXTERNAL | SNAPSHOT => new DirectBigQueryRelation(opts, table, bigQueryClient, bigQueryReadClientFactory, bigQueryTracerFactory, sqlContext)
       case VIEW | MATERIALIZED_VIEW => if (opts.isViewsEnabled) {
@@ -119,6 +123,10 @@ class BigQueryRelationProvider(
     }
 
   override def shortName: String = "bigquery"
+
+  override def dataSourceType(): String = "spark_connector"
+
+  override def dataWarehouseName(parameters: Map[String, String]): String = shortName()
 }
 
 // externalized to be used by tests

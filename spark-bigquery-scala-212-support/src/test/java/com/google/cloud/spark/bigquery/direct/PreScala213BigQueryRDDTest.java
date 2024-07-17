@@ -36,6 +36,7 @@ public class PreScala213BigQueryRDDTest {
             null /* bigQueryReadClientFactory */,
             null /* bigQueryTracerFactory */,
             null /* options */,
+            null /* dataSourceTelemetryMetrics */,
             sparkSession.sqlContext());
     RDD<InternalRow> result =
         factory.createRDD(
@@ -46,7 +47,8 @@ public class PreScala213BigQueryRDDTest {
             null /* columnsInOrder */,
             null /* options */,
             null /* bigQueryReadClientFactory */,
-            null /* bigQueryTracerFactory */);
+            null /* bigQueryTracerFactory */,
+            null /* dataSourceTelemetryMetrics */);
 
     assertThat(result).isInstanceOf(PreScala213BigQueryRDD.class);
   }
