@@ -47,8 +47,7 @@ public class PreScala213BigQueryRDDTest {
             null /* columnsInOrder */,
             null /* options */,
             null /* bigQueryReadClientFactory */,
-            null /* bigQueryTracerFactory */,
-            null /* dataSourceTelemetryMetrics */);
+            null /* bigQueryTracerFactory */);
 
     assertThat(result).isInstanceOf(PreScala213BigQueryRDD.class);
   }

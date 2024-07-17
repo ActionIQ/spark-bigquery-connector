@@ -124,8 +124,12 @@ public class DirectBigQueryRelation extends BigQueryRelation
   @Override
   public RDD<Row> buildScan(String[] requiredColumns, Filter[] filters) {
 
-    if (sqlContext.sparkContext().dataSourceTelemetry().pushDownStrategyFailed().get()) {
-      sqlContext.sparkContext().dataSourceTelemetry().numOfFailedPushDownQueries().getAndDecrement();
+    if (sqlContext.sparkContext().dataSourceTelemetry().checkForPushDownFailures().get()) {
+      sqlContext
+          .sparkContext()
+          .dataSourceTelemetry()
+          .numOfFailedPushDownQueries()
+          .getAndDecrement();
     }
 
     log.info(
