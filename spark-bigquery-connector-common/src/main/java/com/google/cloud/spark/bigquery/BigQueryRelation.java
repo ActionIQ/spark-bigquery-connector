@@ -21,10 +21,9 @@ import com.google.cloud.bigquery.TableInfo;
 import com.google.cloud.bigquery.connector.common.BigQueryUtil;
 import org.apache.spark.sql.SQLContext;
 import org.apache.spark.sql.sources.BaseRelation;
-import org.apache.spark.sql.sources.DataSourceTelemetryProvider;
 import org.apache.spark.sql.types.StructType;
 
-public class BigQueryRelation extends BaseRelation implements DataSourceTelemetryProvider {
+public class BigQueryRelation extends BaseRelation {
 
   private final SparkBigQueryConfig options;
   private final TableInfo table;
@@ -38,7 +37,6 @@ public class BigQueryRelation extends BaseRelation implements DataSourceTelemetr
     this.sqlContext = sqlContext;
     this.tableId = table.getTableId();
     this.tableName = BigQueryUtil.friendlyTableName(tableId);
-    initializeRelationTelemetry(sqlContext, scala.collection.immutable.Map$.MODULE$.empty());
   }
 
   @Override
@@ -58,20 +56,5 @@ public class BigQueryRelation extends BaseRelation implements DataSourceTelemetr
 
   public String getTableName() {
     return tableName;
-  }
-
-  @Override
-  public String shortName() {
-    return "bigquery";
-  }
-
-  @Override
-  public String dataSourceType() {
-    return "spark_connector";
-  }
-
-  @Override
-  public String dataWarehouseName(scala.collection.immutable.Map<String, String> parameters) {
-    return shortName();
   }
 }
