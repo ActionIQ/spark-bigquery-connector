@@ -36,6 +36,7 @@ import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import org.apache.spark.DataSourceTelemetryHelpers;
 import org.apache.spark.rdd.RDD;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -50,10 +51,15 @@ import org.apache.spark.sql.sources.TableScan;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import scala.Function1;
+import scala.Option;
 import scala.runtime.AbstractFunction1;
 
 public class DirectBigQueryRelation extends BigQueryRelation
-    implements TableScan, PrunedScan, PrunedFilteredScan, InsertableRelation {
+    implements TableScan,
+        PrunedScan,
+        PrunedFilteredScan,
+        InsertableRelation,
+        DataSourceTelemetryHelpers {
 
   private final SparkBigQueryConfig options;
   private final TableInfo table;
@@ -111,10 +117,20 @@ public class DirectBigQueryRelation extends BigQueryRelation
 
   @Override
   public RDD<Row> buildScan(String[] requiredColumns, Filter[] filters) {
+
+    if (sqlContext.sparkContext().dataSourceTelemetry().checkForPushDownFailures().get()) {
+      sqlContext
+          .sparkContext()
+          .dataSourceTelemetry()
+          .numOfFailedPushDownQueries()
+          .getAndDecrement();
+    }
+
     log.info(
-        "|Querying table {}, parameters sent from Spark:"
-            + "|requiredColumns=[{}],"
-            + "|filters=[{}]",
+        logEventNameTagger(
+            "|Querying table {}, parameters sent from Spark:"
+                + "|requiredColumns=[{}],"
+                + "|filters=[{}]"),
         getTableName(),
         String.join(",", requiredColumns),
         Arrays.stream(filters).map(f -> f.toString()).collect(Collectors.joining(",")));
@@ -137,7 +153,12 @@ public class DirectBigQueryRelation extends BigQueryRelation
 
     return (RDD<Row>)
         bigQueryRDDFactory.createRddFromTable(
-            getTableId(), readSessionCreator, requiredColumns, compiledFilter);
+            getTableId(),
+            readSessionCreator,
+            requiredColumns,
+            compiledFilter,
+            DataSourceTelemetryHelpers.createDataSourceTelemetry(
+                sqlContext.sparkContext(), Option.empty()));
   }
 
   @Override
@@ -191,7 +212,7 @@ public class DirectBigQueryRelation extends BigQueryRelation
     Function1<Object, InternalRow> objectToInternalRowConverter =
         new ObjectToInternalRowConverter();
 
-    log.info("Used optimized BQ count(*) path. Count: {}", numberOfRows);
+    log.info(logEventNameTagger("Used optimized BQ count(*) path. Count: {}"), numberOfRows);
     return sqlContext
         .sparkContext()
         .range(0, numberOfRows, 1, sqlContext.sparkContext().defaultParallelism())

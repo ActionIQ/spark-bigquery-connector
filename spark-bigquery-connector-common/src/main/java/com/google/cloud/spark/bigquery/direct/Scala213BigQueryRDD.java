@@ -61,6 +61,7 @@ class Scala213BigQueryRDD extends RDD<InternalRow> {
   private final SparkBigQueryConfig options;
   private final BigQueryClientFactory bigQueryClientFactory;
   private final BigQueryTracerFactory bigQueryTracerFactory;
+  private final DataSourceTelemetry dataSourceTelemetryMetrics;
 
   private List<String> streamNames;
 
@@ -72,12 +73,14 @@ class Scala213BigQueryRDD extends RDD<InternalRow> {
       String[] columnsInOrder,
       SparkBigQueryConfig options,
       BigQueryClientFactory bigQueryClientFactory,
-      BigQueryTracerFactory bigQueryTracerFactory) {
+      BigQueryTracerFactory bigQueryTracerFactory,
+      DataSourceTelemetry dataSourceTelemetryMetrics) {
     super(
         sparkContext,
         (Seq<Dependency<?>>) Seq$.MODULE$.<Dependency<?>>newBuilder().result(),
         scala.reflect.ClassTag$.MODULE$.apply(InternalRow.class));
 
+    this.dataSourceTelemetryMetrics = dataSourceTelemetryMetrics;
     this.partitions = parts;
     this.readSession = readSession;
     this.columnsInOrder = columnsInOrder;
@@ -91,6 +94,8 @@ class Scala213BigQueryRDD extends RDD<InternalRow> {
   @Override
   public scala.collection.Iterator<InternalRow> compute(Partition split, TaskContext context) {
     BigQueryPartition bigQueryPartition = (BigQueryPartition) split;
+
+    dataSourceTelemetryMetrics.setPartitionId(Option.apply(bigQueryPartition.toPartitionString()));
 
     BigQueryStorageReadRowsTracer tracer =
         bigQueryTracerFactory.newReadRowsTracer(Joiner.on(",").join(streamNames));
@@ -131,15 +136,12 @@ class Scala213BigQueryRDD extends RDD<InternalRow> {
               Optional.of(schema),
               Optional.of(tracer));
     }
-    tracer.querySubmissionTime(context.getLocalProperty("querySubmissionTime"));
 
     return new InterruptibleIterator<InternalRow>(
         context,
         new ScalaIterator<InternalRow>(
-            new InternalRowIterator(
-                readRowsResponseIterator, converter, readRowsHelper, tracer, context)),
-        new DataSourceTelemetry(
-            false, Option.empty(), Option.empty(), Option.empty(), Option.empty(), Option.empty()));
+            new InternalRowIterator(readRowsResponseIterator, converter, readRowsHelper, tracer)),
+        dataSourceTelemetryMetrics);
   }
 
   @Override

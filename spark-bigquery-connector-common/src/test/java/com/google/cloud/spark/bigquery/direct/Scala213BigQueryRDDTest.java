@@ -47,7 +47,8 @@ public class Scala213BigQueryRDDTest {
             null /* columnsInOrder */,
             null /* options */,
             null /* bigQueryReadClientFactory */,
-            null /* bigQueryTracerFactory */);
+            null /* bigQueryTracerFactory */,
+            null /* dataSourceTelemetryMetrics */);
 
     assertThat(result).isInstanceOf(Scala213BigQueryRDD.class);
   }

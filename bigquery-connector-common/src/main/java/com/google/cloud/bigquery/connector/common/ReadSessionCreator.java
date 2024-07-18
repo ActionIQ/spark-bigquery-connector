@@ -36,11 +36,12 @@ import java.time.Instant;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
+import org.apache.spark.DataSourceTelemetryHelpers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 // A helper class, also handles view materialization
-public class ReadSessionCreator {
+public class ReadSessionCreator implements DataSourceTelemetryHelpers {
 
   public static final int DEFAULT_MAX_PARALLELISM = 20_000;
   public static final int MINIMAL_PARALLELISM = 1;
@@ -139,7 +140,8 @@ public class ReadSessionCreator {
     if (minStreamCount > maxStreamCount) {
       minStreamCount = maxStreamCount;
       log.warn(
-          "preferred min parallelism is larger than the max parallelism, therefore setting it to max parallelism [{}]",
+          logEventNameTagger(
+              "preferred min parallelism is larger than the max parallelism, therefore setting it to max parallelism [{}]"),
           minStreamCount);
     }
     Instant sessionPrepEndTime = Instant.now();
@@ -160,7 +162,10 @@ public class ReadSessionCreator {
     if (config.isReadSessionCachingEnabled()
         && getReadSessionCache().asMap().containsKey(createReadSessionRequest)) {
       ReadSession readSession = getReadSessionCache().asMap().get(createReadSessionRequest);
-      log.info("Reusing read session: {}, for table: {}", readSession.getName(), table);
+      log.info(
+          logEventNameTagger("Reusing read session: {}, for table: {}"),
+          readSession.getName(),
+          table);
       return new ReadSessionResponse(readSession, actualTable);
     }
     ReadSession readSession = bigQueryReadClient.createReadSession(createReadSessionRequest);
@@ -186,11 +191,12 @@ public class ReadSessionCreator {
       log.info("Read session:{}", new Gson().toJson(jsonObject));
       if (readSession.getStreamsCount() != maxStreamCount) {
         log.info(
-            "Requested {} max partitions, but only received {} "
-                + "from the BigQuery Storage API for session {}. Notice that the "
-                + "number of streams in actual may be lower than the requested number, depending on "
-                + "the amount parallelism that is reasonable for the table and the maximum amount of "
-                + "parallelism allowed by the system.",
+            logEventNameTagger(
+                "Requested {} max partitions, but only received {} "
+                    + "from the BigQuery Storage API for session {}. Notice that the "
+                    + "number of streams in actual may be lower than the requested number, depending on "
+                    + "the amount parallelism that is reasonable for the table and the maximum amount of "
+                    + "parallelism allowed by the system."),
             maxStreamCount,
             readSession.getStreamsCount(),
             readSession.getName());

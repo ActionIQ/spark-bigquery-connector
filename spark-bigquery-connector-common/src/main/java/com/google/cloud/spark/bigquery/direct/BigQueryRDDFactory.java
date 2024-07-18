@@ -38,24 +38,27 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Streams;
 import java.lang.reflect.Constructor;
-import java.time.Instant;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.apache.spark.DataSourceTelemetry;
+import org.apache.spark.DataSourceTelemetryHelpers;
 import org.apache.spark.Partition;
 import org.apache.spark.SparkContext;
 import org.apache.spark.rdd.RDD;
 import org.apache.spark.sql.SQLContext;
 import org.apache.spark.sql.catalyst.InternalRow;
+import org.apache.spark.sql.sources.DataSourceTelemetryProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import scala.Option;
 
 /**
  * Wrapper class for generating BigQueryRDD. Extracted this logic out so that we can reuse it from
  * 1) Dsv1 buildScan 2) Dsv1 pushdown functionality 3) Dsv2 pushdown functionality
  */
-public class BigQueryRDDFactory {
+public class BigQueryRDDFactory implements DataSourceTelemetryProvider, DataSourceTelemetryHelpers {
 
   private static final Logger log = LoggerFactory.getLogger(BigQueryRDDFactory.class);
 
@@ -79,6 +82,7 @@ public class BigQueryRDDFactory {
     this.bigQueryReadClientFactory = bigQueryReadClientFactory;
     this.bigQueryTracerFactory = bigQueryTracerFactory;
     this.sqlContext = sqlContext;
+    initializeRelationTelemetry(sqlContext, scala.collection.immutable.Map$.MODULE$.empty());
   }
 
   /**
@@ -86,12 +90,19 @@ public class BigQueryRDDFactory {
    * pushdown module
    */
   public RDD<InternalRow> buildScanFromSQL(String sql) {
-    log.info("Materializing the following sql query to a BigQuery table: {}", sql);
-    // pass a date as string in DateTimeFormatter ISO_INSTANT format via sparkContext
-    // the string will be decoded to Java Instant downstream in Executors
+    log.info(
+        logEventNameTagger("Materializing the following sql query to a BigQuery table: {}"), sql);
+
+    DataSourceTelemetry dataSourceTelemetryMetrics =
+        DataSourceTelemetryHelpers.createDataSourceTelemetry(
+            sqlContext.sparkContext(), Option.empty());
+
     sqlContext
         .sparkContext()
-        .setLocalProperty("querySubmissionTime", String.valueOf(Instant.now()));
+        .emitMetricsLog(
+            dataSourceTelemetryMetrics.compileGlobalTelemetryTagsMap(Option.apply(sql)));
+
+    dataSourceTelemetryMetrics.setQuerySubmissionTime();
 
     TableInfo actualTable =
         bigQueryClient.materializeQueryToTable(
@@ -113,7 +124,7 @@ public class BigQueryRDDFactory {
             .collect(Collectors.toList());
 
     log.info(
-        "Querying table {}, requiredColumns=[{}]",
+        logEventNameTagger("Querying table {}, requiredColumns=[{}]"),
         actualTable.getTableId().getProject()
             + ":"
             + actualTable.getTableId().getDataset()
@@ -130,7 +141,8 @@ public class BigQueryRDDFactory {
             actualTable.getTableId(),
             readSessionCreator,
             requiredColumns.toArray(new String[0]),
-            "");
+            "",
+            dataSourceTelemetryMetrics);
   }
 
   // Creates BigQueryRDD from the BigQuery table that is passed in. Note that we return RDD<?>
@@ -140,7 +152,8 @@ public class BigQueryRDDFactory {
       TableId tableId,
       ReadSessionCreator readSessionCreator,
       String[] requiredColumns,
-      String filter) {
+      String filter,
+      DataSourceTelemetry dataSourceTelemetryMetrics) {
     ReadSessionResponse readSessionResponse =
         readSessionCreator.create(
             tableId, ImmutableList.copyOf(requiredColumns), BigQueryUtil.emptyIfNeeded(filter));
@@ -155,7 +168,7 @@ public class BigQueryRDDFactory {
             .collect(Collectors.toList());
 
     log.info(
-        "Created read session for table '{}': {}",
+        logEventNameTagger("Created read session for table '{}': {}"),
         BigQueryUtil.friendlyTableName(tableId),
         readSession.getName());
 
@@ -175,7 +188,8 @@ public class BigQueryRDDFactory {
         requiredColumns,
         options,
         bigQueryReadClientFactory,
-        bigQueryTracerFactory);
+        bigQueryTracerFactory,
+        dataSourceTelemetryMetrics);
   }
 
   // Moved from BigQueryRDD.scanTable
@@ -188,7 +202,8 @@ public class BigQueryRDDFactory {
       String[] columnsInOrder,
       SparkBigQueryConfig options,
       BigQueryClientFactory bigQueryClientFactory,
-      BigQueryTracerFactory bigQueryTracerFactory) {
+      BigQueryTracerFactory bigQueryTracerFactory,
+      DataSourceTelemetry dataSourceTelemetryMetrics) {
     // Unfortunately we need to use reflection here due to a cyclic dependency issue, and the fact
     // that RDD constructor dependencies are different between Scala 2.12 and Scala 2.13. In Scala
     // 2.13 `scala.collection.Seq` is mapped to `scala.collection.immutable.Seq` and this is why we
@@ -216,7 +231,8 @@ public class BigQueryRDDFactory {
               String[].class,
               SparkBigQueryConfig.class,
               BigQueryClientFactory.class,
-              BigQueryTracerFactory.class);
+              BigQueryTracerFactory.class,
+              DataSourceTelemetry.class);
 
       RDD<InternalRow> bigQueryRDD =
           constructor.newInstance(
@@ -227,7 +243,8 @@ public class BigQueryRDDFactory {
               columnsInOrder,
               options,
               bigQueryClientFactory,
-              bigQueryTracerFactory);
+              bigQueryTracerFactory,
+              dataSourceTelemetryMetrics);
 
       return bigQueryRDD;
     } catch (Exception e) {
@@ -249,5 +266,20 @@ public class BigQueryRDDFactory {
       StandardTableDefinition standardTableDefinition = (StandardTableDefinition) tableDefinition;
       return standardTableDefinition.getNumBytes();
     }
+  }
+
+  @Override
+  public String shortName() {
+    return "bigquery";
+  }
+
+  @Override
+  public String dataSourceType() {
+    return "spark_connector";
+  }
+
+  @Override
+  public String dataWarehouseName(scala.collection.immutable.Map<String, String> parameters) {
+    return shortName();
   }
 }
