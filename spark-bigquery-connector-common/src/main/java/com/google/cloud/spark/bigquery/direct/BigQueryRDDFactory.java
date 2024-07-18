@@ -49,6 +49,7 @@ import org.apache.spark.SparkContext;
 import org.apache.spark.rdd.RDD;
 import org.apache.spark.sql.SQLContext;
 import org.apache.spark.sql.catalyst.InternalRow;
+import org.apache.spark.sql.sources.DataSourceTelemetryProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import scala.Option;
@@ -57,7 +58,7 @@ import scala.Option;
  * Wrapper class for generating BigQueryRDD. Extracted this logic out so that we can reuse it from
  * 1) Dsv1 buildScan 2) Dsv1 pushdown functionality 3) Dsv2 pushdown functionality
  */
-public class BigQueryRDDFactory implements DataSourceTelemetryHelpers {
+public class BigQueryRDDFactory implements DataSourceTelemetryProvider, DataSourceTelemetryHelpers {
 
   private static final Logger log = LoggerFactory.getLogger(BigQueryRDDFactory.class);
 
@@ -81,6 +82,7 @@ public class BigQueryRDDFactory implements DataSourceTelemetryHelpers {
     this.bigQueryReadClientFactory = bigQueryReadClientFactory;
     this.bigQueryTracerFactory = bigQueryTracerFactory;
     this.sqlContext = sqlContext;
+    initializeRelationTelemetry(sqlContext, scala.collection.immutable.Map$.MODULE$.empty());
   }
 
   /**
@@ -264,5 +266,20 @@ public class BigQueryRDDFactory implements DataSourceTelemetryHelpers {
       StandardTableDefinition standardTableDefinition = (StandardTableDefinition) tableDefinition;
       return standardTableDefinition.getNumBytes();
     }
+  }
+
+  @Override
+  public String shortName() {
+    return "bigquery";
+  }
+
+  @Override
+  public String dataSourceType() {
+    return "spark_connector";
+  }
+
+  @Override
+  public String dataWarehouseName(scala.collection.immutable.Map<String, String> parameters) {
+    return shortName();
   }
 }
