@@ -222,6 +222,10 @@ abstract class SparkExpressionConverter {
             convertStatement(date, fields) + s", ${format.toString()}"
           )
       /**
+       * --- spark.sql(
+       * ---   """select aiq_day_diff(1693609200000, 1693616400000, 'UTC')"""
+       * --- ).as[Long].collect.head == 1
+       *
        * aiq_day_diff(startTsExpr, endTsExpr, timezoneExpr) =>
        * DATE_DIFF(
        *   DATE(TIMESTAMP_MILLIS(endTsExpr), timezoneExpr),
@@ -236,8 +240,54 @@ abstract class SparkExpressionConverter {
         val endDt = ConstantString("DATE") + blockStatement(endTs + "," + convertStatement(timezoneId, fields))
         ConstantString("DATE_DIFF") + blockStatement(endDt + "," + startDt + "," + "DAY")
 
+      /**
+       * --- spark.sql(
+       * ---   """select aiq_date_to_string(1567363852000, "yyyy-MM-dd HH:mm", 'America/New_York')"""
+       * --- ).as[String].collect.head == "2019-09-01 14:50"
+       *
+       * SELECT CAST(DATETIME(TIMESTAMP_MILLIS(1567363852000) , "America/New_York") AS STRING FORMAT "yyyy-MM-dd HH24:mi")
+       * 2019-09-01 14:50
+       */
+      case AiqDateToString(timestamp, dateFormat, timezoneId) if dateFormat.foldable =>
+        val convertedFormat = isoDateFmtToBigQuery(dateFormat.toString)
+        val tsMillisStmt = ConstantString("TIMESTAMP_MILLIS") + blockStatement(convertStatement(timestamp, fields))
+        val datetimeStmt = ConstantString("DATETIME") + blockStatement(tsMillisStmt)
+        val fixedFormat = isoDateFmtToBigQuery(dateFormat.toString)
+        val formatStr = s""" AS STRING FORMAT "$fixedFormat""""
+        ConstantString("CAST") + blockStatement(datetimeStmt + formatStr)
+
       case _ => null
     })
+  }
+
+  /**
+   * Function to convert a ISO date format:
+   *
+   * https://en.wikipedia.org/wiki/ISO_8601#Times
+   *
+   * To Bigquery date format:
+   *
+   * https://cloud.google.com/bigquery/docs/reference/standard-sql/format-elements#format_date_time_as_string
+   */
+  private def isoDateFmtToBigQuery(format: String): String = {
+    format
+      // Two digits for hour (00 through 23)
+      .replaceAll("HH", "HH24")
+      // Snowflake Two digits for hour (01 through 12)
+      .replaceAll("hh", "HH12")
+      // Two digits for minute (00 through 59)
+      .replaceAll("mm", "MI")
+      // Two digits for second (00 through 59)
+      .replaceAll("ss", "SS")
+      // Two-digit month => M -> MM
+      .replaceAll("(?<=[^M])M(?=[^M])", "MM")
+      // Abbreviated month name => MMM -> MON
+      .replaceAll("(?<=[^M])M{3}(?=[^M])", "MON")
+      // Abbreviated day of week
+      .replaceAll("E{1,3}", "DY")
+      // Ante meridiem (am) / post meridiem (pm)
+      .replaceAll("a", "AM")
+      .replaceAll("p", "PM")
   }
 
   def convertMathematicalExpressions(expression: Expression, fields: Seq[Attribute]): Option[BigQuerySQLStatement] = {

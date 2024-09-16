@@ -24,7 +24,9 @@ import com.google.cloud.spark.bigquery.integration.model.NumStruct;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.IsoFields;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.Row;
@@ -1113,7 +1115,7 @@ public class QueryPushdownIntegrationTestBase extends SparkBigQueryIntegrationTe
     }
   }
 
-  @Test
+  // spotless:off
   /**
    * Reading from a BigQuery table created with: create or replace table aiq-dev.connector_dev.dt (
    * id integer, ts1 integer, ts2 integer, tz string );
@@ -1125,6 +1127,8 @@ public class QueryPushdownIntegrationTestBase extends SparkBigQueryIntegrationTe
    * unix_millis(timestamp("2023-09-01T23:59:59")),
    * unix_millis(timestamp("2023-09-02T00:00:00")),"Asia/Shanghai");
    */
+  // spotless:on
+  @Test
   public void testAiqDayDiff() {
     Dataset<Row> df = readTestDataFromBigQuery("connector_dev", "connector_dev.dt");
     df.createOrReplaceTempView("dt");
@@ -1140,6 +1144,43 @@ public class QueryPushdownIntegrationTestBase extends SparkBigQueryIntegrationTe
             .sql("select aiq_day_diff(ts1, unix_timestamp() * 1000, 'UTC') from dt")
             .collectAsList();
     assert ((int) diff2.get(0).get(0) > 10); // 2023-09-01 to current
+  }
+
+  // spotless:off
+  /**
+   * Reading from a BigQuery table created with: create or replace table aiq-dev.connector_dev.dt2 (
+   * ts int64, fmt string, tz string );
+   *
+   * <p>insert into aiq-dev.connector_dev.dt2 values (1567363852000, 'MM', 'America/New_York'),
+   * (1567363852000, 'yyyy-MM-dd', 'America/New_York'), (1567363852000, 'yyyy-MM-dd HH:mm',
+   * 'America/New_York'), (1567363852000, 'yyyy-MM-dd hh:mm a', 'America/New_York'), (1567363852000,
+   * 'yyyy-MM-dd a hh:mm', 'America/New_York'), (1567363852000, 'yyyy-MM-dd a hh:mm:mm:ss a',
+   * 'America/New_York'), (1567363852000, 'yyyy-MM-dd HH:mm:ss', 'America/New_York'),
+   * (1567363852000, 'yyyy-MM-dd hh:mm:ss', 'America/New_York'), (1567363852000, 'yyyy-MM-dd
+   * hh:mm:mm:ss', 'America/New_York')
+   */
+  // spotless:on
+  @Test
+  public void testAiqDateToString() {
+    Dataset<Row> df = readTestDataFromBigQuery("connector_dev", "connector_dev.dt2");
+    df.createOrReplaceTempView("dt2");
+    List<String> results =
+        spark.sql("select aiq_date_to_string(ts, fmt, tz) as res from dt2 order by res")
+            .collectAsList().stream()
+            .map(r -> r.getString(0))
+            .collect(Collectors.toList());
+
+    assert (results
+        == Arrays.asList(
+            "09",
+            "2019-09-01",
+            "2019-09-01 14:50",
+            "2019-09-01 02:50 PM",
+            "2019-09-01 PM 02:50",
+            "2019-09-01 PM 02:50:50:52 PM",
+            "2019-09-01 14:50:52",
+            "2019-09-01 02:50:52",
+            "2019-09-01 02:50:50:52"));
   }
 
   @Test
