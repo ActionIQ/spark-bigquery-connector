@@ -1146,29 +1146,31 @@ public class QueryPushdownIntegrationTestBase extends SparkBigQueryIntegrationTe
   }
 
   /**
-   * Reading from a BigQuery table created with: create or replace table aiq-dev.connector_dev.dt2 (
-   * ts int64, fmt string, tz string );
+   * Reading from a BigQuery table created with: create or replace table aiq-dev.connector_dev.dt2
+   * (id integer, ts int64, fmt string, tz string );
    *
-   * <p>insert into aiq-dev.connector_dev.dt2 values (1567363852000, 'MM', 'America/New_York'),
-   * (1567363852000, 'yyyy-MM-dd', 'America/New_York'), (1567363852000, 'yyyy-MM-dd HH:mm',
-   * 'America/New_York'), (1567363852000, 'yyyy-MM-dd hh:mm a', 'America/New_York'), (1567363852000,
-   * 'yyyy-MM-dd a hh:mm', 'America/New_York'), (1567363852000, 'yyyy-MM-dd a hh:mm:mm:ss a',
-   * 'America/New_York'), (1567363852000, 'yyyy-MM-dd HH:mm:ss', 'America/New_York'),
-   * (1567363852000, 'yyyy-MM-dd hh:mm:ss', 'America/New_York'), (1567363852000, 'yyyy-MM-dd
-   * hh:mm:mm:ss', 'America/New_York')
+   * <p>insert into aiq-dev.connector_dev.dt2 values (0, 1567363852000, 'MM', 'America/New_York'),
+   * (1, 1567363852000, 'yyyy-MM-dd', 'America/New_York'), (2, 1567363852000, 'yyyy-MM-dd HH:mm',
+   * 'America/New_York'), (3, 1567363852000, 'yyyy-MM-dd hh:mm a', 'America/New_York'), (4,
+   * 1567363852000, 'yyyy-MM-dd a hh:mm', 'America/New_York'), (5, 1567363852000, 'yyyy-MM-dd a
+   * hh:mm:mm:ss a', 'America/New_York'), (6, 1567363852000, 'yyyy-MM-dd HH:mm:ss',
+   * 'America/New_York'), (7, 1567363852000, 'yyyy-MM-dd hh:mm:ss', 'America/New_York'), (8,
+   * 1567363852000, 'yyyy-MM-dd hh:mm:mm:ss', 'America/New_York')
    */
   @Test
   public void testAiqDateToString() {
     Dataset<Row> df = readTestDataFromBigQuery("connector_dev", "connector_dev.dt2");
     df.createOrReplaceTempView("dt2");
     List<String> results =
-        spark.sql("select aiq_date_to_string(ts, fmt, tz) as res from dt2 order by res")
-            .collectAsList().stream()
+        spark.sql("select aiq_date_to_string(ts, fmt, tz) from dt2 order by id").collectAsList()
+            .stream()
             .map(r -> r.getString(0))
             .collect(Collectors.toList());
 
-    assert (results
-        == Arrays.asList(
+    System.out.println("Results" + results);
+
+    assert (results.equals(
+        Arrays.asList(
             "09",
             "2019-09-01",
             "2019-09-01 14:50",
@@ -1177,7 +1179,7 @@ public class QueryPushdownIntegrationTestBase extends SparkBigQueryIntegrationTe
             "2019-09-01 PM 02:50:50:52 PM",
             "2019-09-01 14:50:52",
             "2019-09-01 02:50:52",
-            "2019-09-01 02:50:50:52"));
+            "2019-09-01 02:50:50:52")));
   }
 
   /** Test for AIQ EXE-2026 */
