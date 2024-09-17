@@ -252,7 +252,7 @@ abstract class SparkExpressionConverter {
         val tsMillisStmt = ConstantString("TIMESTAMP_MILLIS") + blockStatement(convertStatement(timestamp, fields))
         val datetimeStmt = ConstantString("DATETIME") + blockStatement(tsMillisStmt + "," + convertStatement(timezoneId, fields))
         val fixedFormat = isoDateFmtToBigQuery(dateFormat.toString)
-        val formatStr = s""" AS STRING FORMAT "$fixedFormat""""
+        val formatStr = s"""AS STRING FORMAT "$fixedFormat""""
         ConstantString("CAST") + blockStatement(datetimeStmt + formatStr)
 
       case _ => null
