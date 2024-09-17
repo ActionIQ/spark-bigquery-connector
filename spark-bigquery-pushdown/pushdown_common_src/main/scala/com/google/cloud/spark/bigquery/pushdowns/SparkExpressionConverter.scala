@@ -249,9 +249,8 @@ abstract class SparkExpressionConverter {
        * 2019-09-01 14:50
        */
       case AiqDateToString(timestamp, dateFormat, timezoneId) if dateFormat.foldable =>
-        val convertedFormat = isoDateFmtToBigQuery(dateFormat.toString)
         val tsMillisStmt = ConstantString("TIMESTAMP_MILLIS") + blockStatement(convertStatement(timestamp, fields))
-        val datetimeStmt = ConstantString("DATETIME") + blockStatement(tsMillisStmt)
+        val datetimeStmt = ConstantString("DATETIME") + blockStatement(tsMillisStmt + "," + convertStatement(timezoneId, fields))
         val fixedFormat = isoDateFmtToBigQuery(dateFormat.toString)
         val formatStr = s""" AS STRING FORMAT "$fixedFormat""""
         ConstantString("CAST") + blockStatement(datetimeStmt + formatStr)
@@ -270,24 +269,29 @@ abstract class SparkExpressionConverter {
    * https://cloud.google.com/bigquery/docs/reference/standard-sql/format-elements#format_date_time_as_string
    */
   private def isoDateFmtToBigQuery(format: String): String = {
+    // be careful with the order here, you dont want MMM -> Month -> MMonth
     format
+      // Two-digit month => M -> MM
+      .replaceAll("(?<=[^M])M(?=[^M])", "MM")
+      // Full month name => MMMM... -> Month
+      .replaceAll("(?<=[^M])M{4,8}(?=[^M])", "Month")
+      // Abbreviated month name => MMM -> MON
+      .replaceAll("(?<=[^M])M{3}(?=[^M])", "Mon")
       // Two digits for hour (00 through 23)
       .replaceAll("HH", "HH24")
-      // Snowflake Two digits for hour (01 through 12)
+      // Two digits for hour (01 through 12)
       .replaceAll("hh", "HH12")
       // Two digits for minute (00 through 59)
       .replaceAll("mm", "MI")
       // Two digits for second (00 through 59)
       .replaceAll("ss", "SS")
-      // Two-digit month => M -> MM
-      .replaceAll("(?<=[^M])M(?=[^M])", "MM")
-      // Abbreviated month name => MMM -> MON
-      .replaceAll("(?<=[^M])M{3}(?=[^M])", "MON")
-      // Abbreviated day of week
-      .replaceAll("E{1,3}", "DY")
       // Ante meridiem (am) / post meridiem (pm)
       .replaceAll("a", "AM")
       .replaceAll("p", "PM")
+      // Full day of week => EEEE... -> Day
+      .replaceAll("(?<=[^E])E{4,8}(?=[^E])", "Day")
+      // Abbreviated day of week => E/EE/EEE -> Dy
+      .replaceAll("(?<=[^E])E{1,3}(?=[^E])", "Dy")
   }
 
   def convertMathematicalExpressions(expression: Expression, fields: Seq[Attribute]): Option[BigQuerySQLStatement] = {
