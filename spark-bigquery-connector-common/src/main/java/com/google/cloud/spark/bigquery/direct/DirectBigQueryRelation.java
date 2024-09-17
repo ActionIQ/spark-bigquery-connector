@@ -123,7 +123,7 @@ public class DirectBigQueryRelation extends BigQueryRelation
           .sparkContext()
           .dataSourceTelemetry()
           .numOfFailedPushDownQueries()
-          .getAndDecrement();
+          .getAndIncrement();
     }
 
     log.info(

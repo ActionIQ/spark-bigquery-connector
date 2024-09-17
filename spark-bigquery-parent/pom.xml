@@ -85,7 +85,7 @@
 
     <properties>
         <gpg.skip>true</gpg.skip>
-        <revision>0.30.0-aiq15</revision>
+        <revision>0.30.0-aiq16</revision>
 
         <avro.version>1.11.1</avro.version>
         <arrow.version>11.0.0</arrow.version>
@@ -106,7 +106,9 @@
         <nexus.remote.skip>false</nexus.remote.skip>
         <shade.skip>true</shade.skip>
         <argLine>
+            <!-- TODO: figure out how to give tests more memory, then enable testWindowStatements -->
             <!-- https://github.com/ActionIQ/flame/blob/3.3/pom.xml#L309C1-L323C48 -->
+            -XX:+IgnoreUnrecognizedVMOptions
             --add-opens=java.base/java.lang=ALL-UNNAMED
             --add-opens=java.base/java.lang.invoke=ALL-UNNAMED
             --add-opens=java.base/java.lang.reflect=ALL-UNNAMED
@@ -126,7 +128,7 @@
         <!-- checkstyle
         <checkstyle.header.file>${reactor.project.basedir}/java.header</checkstyle.header.file>
         -->
-        <spark.version>3-3-2-aiq99</spark.version>
+        <spark.version>3-3-2-aiq109</spark.version>
         <scala.binary.version>2.12</scala.binary.version>
         <scala.patch.version>15</scala.patch.version>
     </properties>

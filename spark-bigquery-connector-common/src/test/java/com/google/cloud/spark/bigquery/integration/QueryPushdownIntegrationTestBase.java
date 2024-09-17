@@ -18,13 +18,17 @@ package com.google.cloud.spark.bigquery.integration;
 import static com.google.common.truth.Truth.assertThat;
 import static java.time.temporal.TemporalAdjusters.firstDayOfYear;
 
+import com.google.cloud.Tuple;
 import com.google.cloud.spark.bigquery.BigQueryConnectorUtils;
 import com.google.cloud.spark.bigquery.SparkBigQueryConfig.WriteMethod;
 import com.google.cloud.spark.bigquery.integration.model.NumStruct;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.IsoFields;
+import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.Row;
@@ -32,9 +36,17 @@ import org.apache.spark.sql.SaveMode;
 import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema;
 import org.apache.spark.sql.execution.SparkPlan;
 import org.apache.spark.sql.types.DataTypes;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class QueryPushdownIntegrationTestBase extends SparkBigQueryIntegrationTestBase {
+
+  private static <T> List<Tuple<Integer, T>> zipWithIndex(List<T> items) {
+    AtomicInteger counter = new AtomicInteger();
+    return items.stream()
+        .map(element -> Tuple.of(counter.getAndIncrement(), element))
+        .collect(Collectors.toList());
+  }
 
   @Test
   public void testApproxCountDistinct() {
@@ -376,7 +388,7 @@ public class QueryPushdownIntegrationTestBase extends SparkBigQueryIntegrationTe
     assertThat(r1.get(8)).isEqualTo(true); // In
   }
 
-  @Test
+  @Ignore("TODO: give this more memory")
   public void testWindowStatements() {
     Dataset<Row> df =
         spark
@@ -1113,22 +1125,24 @@ public class QueryPushdownIntegrationTestBase extends SparkBigQueryIntegrationTe
     }
   }
 
-  @Test
   /**
-   * Reading from a BigQuery table created with: create or replace table aiq-dev.connector_dev.dt (
-   * id integer, ts1 integer, ts2 integer, tz string );
+   * Reading from a BigQuery table created with (note selects will not keep the order, so sort by
+   * id):
    *
-   * <p>insert `aiq-dev.connector_dev.dt` values (0, unix_millis(timestamp("2023-09-01T23:59:59")),
+   * <p>create or replace table aiq-dev.connector_dev.dt (id integer, ts1 integer, ts2 integer, tz
+   * string );
+   *
+   * <p>insert aiq-dev.connector_dev.dt values (0, unix_millis(timestamp("2023-09-01T23:59:59")),
    * unix_millis(timestamp("2023-09-02T00:00:00")),"UTC"), (1,
    * unix_millis(timestamp("2023-09-01T23:59:59")),
    * unix_millis(timestamp("2023-09-02T00:00:00")),"America/New_York"), (2,
    * unix_millis(timestamp("2023-09-01T23:59:59")),
    * unix_millis(timestamp("2023-09-02T00:00:00")),"Asia/Shanghai");
    */
+  @Test
   public void testAiqDayDiff() {
     Dataset<Row> df = readTestDataFromBigQuery("connector_dev", "connector_dev.dt");
     df.createOrReplaceTempView("dt");
-    // INSERT might not follow the exact order
     List<Row> diffs1 =
         spark.sql("select aiq_day_diff(ts1, ts2, tz) from dt order by id").collectAsList();
     assertThat(diffs1.size()).isEqualTo(3);
@@ -1142,8 +1156,127 @@ public class QueryPushdownIntegrationTestBase extends SparkBigQueryIntegrationTe
     assert ((int) diff2.get(0).get(0) > 10); // 2023-09-01 to current
   }
 
+  /**
+   * Reading from a BigQuery table created with:
+   *
+   * <p>create or replace table aiq-dev.connector_dev.dt3 (ts integer )
+   *
+   * <p>insert into aiq-dev.connector_dev.dt3 values (1567363852000)
+   */
   @Test
-  /** AIQ EXE-2026 */
+  public void testAiqDateToStringPart1() {
+    var df = readTestDataFromBigQuery("connector_dev", "connector_dev.dt3");
+    df.createOrReplaceTempView("dt3");
+
+    var formatTestsWithIndex =
+        zipWithIndex(
+            Arrays.asList(
+                "MM",
+                "yyyy-MM-dd",
+                "yyyy-MM-dd HH:mm",
+                "yyyy-MM-dd hh:mm a",
+                "yyyy-MM-dd a hh:mm",
+                "yyyy-MM-dd a hh:mm:mm:ss a",
+                "yyyy-MM-dd HH:mm:ss",
+                "yyyy-MM-dd hh:mm:ss",
+                "yyyy-MM-dd hh:mm:mm:ss",
+                "yyyy-MM-dd M HH:mm:ss",
+                "yyyy-MM-dd MM HH:mm:ss",
+                "yyyy-MM-dd aMa HH:mm:ss",
+                "yyyy-MM-dd MMM HH:mm:ss",
+                "yyyy-MM-dd aMMMa HH:mm:ss",
+                "yyyy-MM-dd MMMM HH:mm:ss",
+                "yyyy-MM-dd MMMMM HH:mm:ss",
+                "yyyy-MM-dd MMMMMM HH:mm:ss",
+                "yyyy-MM-dd E HH:mm:ss",
+                "yyyy-MM-dd EE HH:mm:ss",
+                "yyyy-MM-dd EEE HH:mm:ss",
+                "yyyy-MM-dd EEEE HH:mm:ss",
+                "yyyy-MM-dd EEEEEEEE HH:mm:ss"));
+
+    var sqlSelects =
+        formatTestsWithIndex.stream()
+            .map(
+                f ->
+                    "select "
+                        + f.x()
+                        + " as id, aiq_date_to_string(ts, '"
+                        + f.y()
+                        + "', 'America/New_York') as res from dt3")
+            .collect(Collectors.toList());
+
+    List<String> results =
+        spark.sql(String.join(" UNION ALL ", sqlSelects) + " ORDER BY id").collectAsList().stream()
+            .map(r -> r.getString(1))
+            .collect(Collectors.toList());
+
+    assert (results.equals(
+        Arrays.asList(
+            "09",
+            "2019-09-01",
+            "2019-09-01 14:50",
+            "2019-09-01 02:50 PM",
+            "2019-09-01 PM 02:50",
+            "2019-09-01 PM 02:50:50:52 PM",
+            "2019-09-01 14:50:52",
+            "2019-09-01 02:50:52",
+            "2019-09-01 02:50:50:52",
+            "2019-09-01 09 14:50:52",
+            "2019-09-01 09 14:50:52",
+            "2019-09-01 PM09PM 14:50:52",
+            "2019-09-01 Sep 14:50:52",
+            "2019-09-01 PMSepPM 14:50:52",
+            "2019-09-01 September 14:50:52",
+            "2019-09-01 September 14:50:52",
+            "2019-09-01 September 14:50:52",
+            "2019-09-01 Sun 14:50:52",
+            "2019-09-01 Sun 14:50:52",
+            "2019-09-01 Sun 14:50:52",
+            "2019-09-01 Sunday 14:50:52",
+            "2019-09-01 Sunday 14:50:52")));
+  }
+
+  /**
+   * Reading from a BigQuery table created with (note selects will not keep the order, so sort by
+   * id):
+   *
+   * <p>create or replace table aiq-dev.connector_dev.dt2 (id integer, ts int64, fmt string, tz
+   * string );
+   *
+   * <p>insert into aiq-dev.connector_dev.dt2 values (0, 1567363852000, 'MM', 'America/New_York'),
+   * (1, 1567363852000, 'yyyy-MM-dd', 'America/New_York'), (2, 1567363852000, 'yyyy-MM-dd HH:mm',
+   * 'America/New_York'), (3, 1567363852000, 'yyyy-MM-dd hh:mm a', 'America/New_York'), (4,
+   * 1567363852000, 'yyyy-MM-dd a hh:mm', 'America/New_York'), (5, 1567363852000, 'yyyy-MM-dd a
+   * hh:mm:mm:ss a', 'America/New_York'), (6, 1567363852000, 'yyyy-MM-dd HH:mm:ss',
+   * 'America/New_York'), (7, 1567363852000, 'yyyy-MM-dd hh:mm:ss', 'America/New_York'), (8,
+   * 1567363852000, 'yyyy-MM-dd hh:mm:mm:ss', 'America/New_York')
+   */
+  @Test
+  public void testAiqDateToStringPart2() {
+    Dataset<Row> df = readTestDataFromBigQuery("connector_dev", "connector_dev.dt2");
+    df.createOrReplaceTempView("dt2");
+
+    List<String> results =
+        spark.sql("select aiq_date_to_string(ts, fmt, tz) from dt2 order by id").collectAsList()
+            .stream()
+            .map(r -> r.getString(0))
+            .collect(Collectors.toList());
+
+    assert (results.equals(
+        Arrays.asList(
+            "09",
+            "2019-09-01",
+            "2019-09-01 14:50",
+            "2019-09-01 02:50 PM",
+            "2019-09-01 PM 02:50",
+            "2019-09-01 PM 02:50:50:52 PM",
+            "2019-09-01 14:50:52",
+            "2019-09-01 02:50:52",
+            "2019-09-01 02:50:50:52")));
+  }
+
+  /** Test for AIQ EXE-2026 */
+  @Test
   public void testSourceQuery() {
     spark
         .sqlContext()
