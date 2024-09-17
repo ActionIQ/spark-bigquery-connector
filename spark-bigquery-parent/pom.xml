@@ -106,7 +106,9 @@
         <nexus.remote.skip>false</nexus.remote.skip>
         <shade.skip>true</shade.skip>
         <argLine>
+            <!-- TODO: figure out how to give tests more memory, then enable testWindowStatements -->
             <!-- https://github.com/ActionIQ/flame/blob/3.3/pom.xml#L309C1-L323C48 -->
+            -XX:+IgnoreUnrecognizedVMOptions
             --add-opens=java.base/java.lang=ALL-UNNAMED
             --add-opens=java.base/java.lang.invoke=ALL-UNNAMED
             --add-opens=java.base/java.lang.reflect=ALL-UNNAMED
