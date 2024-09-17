@@ -957,7 +957,7 @@ class SparkExpressionConverterSuite extends AnyFunSuite with BeforeAndAfter {
     val exp = AiqDateToString(startMsAttributeReference, Literal("yyyy-MM-dd HH:mm"), Literal("America/New_York"))
     val bigQuerySQLStatement = expressionConverter.convertDateExpressions(exp, fields)
     assert(bigQuerySQLStatement.exists { s =>
-      s.toString == "CAST ( DATETIME ( TIMESTAMP_MILLIS ( STARTMS ) , 'America/New_York' ) AS STRING FORMAT \"yyyy-MM-dd HH24:mi\""
+      s.toString == "CAST ( DATETIME ( TIMESTAMP_MILLIS ( STARTMS ) , 'America/New_York' ) AS STRING FORMAT \"yyyy-MM-dd HH24:MI\""
     })
   }
 
