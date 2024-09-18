@@ -327,6 +327,29 @@ abstract class SparkExpressionConverter {
            _: Sqrt | _: Tan | _: Tanh =>
         ConstantString(expression.prettyName.toUpperCase) + blockStatement(convertStatements(fields, expression.children: _*))
 
+      // These hash functions all return bytes, so must convert to hex string
+
+      // SELECT TO_HEX(MD5("Spark"))
+      // 8cde774d6f7333752ed72cacddb05126
+      case Md5(child) =>
+        val hashRes = ConstantString("MD5") + blockStatement(convertStatement(child, fields))
+        ConstantString("TO_HEX") + blockStatement(hashRes)
+
+      // SELECT sha1('Spark')
+      // 85f5955f4b27a9a4c2aab6ffe5d7189fc298b92c
+      case Sha1(child) =>
+        val hashRes = ConstantString("SHA1") + blockStatement(convertStatement(child, fields))
+        ConstantString("TO_HEX") + blockStatement(hashRes)
+
+      // BQ only supports sha 256:
+      // https://cloud.google.com/bigquery/docs/reference/standard-sql/hash_functions#sha256
+      //
+      // SELECT sha2('Spark', 256)
+      // 529bc3b07127ecb7e53a4dcf1991d9152c24537d919178022b2c42657f79a26b
+      case Sha2(child, bitLen) if bitLen.foldable && bitLen.toString == "256" =>
+        val hashRes = ConstantString("SHA256") + blockStatement(convertStatement(child, fields))
+        ConstantString("TO_HEX") + blockStatement(hashRes)
+
       case IsNaN(child) =>
         ConstantString("IS_NAN") + blockStatement(convertStatement(child, fields))
 
