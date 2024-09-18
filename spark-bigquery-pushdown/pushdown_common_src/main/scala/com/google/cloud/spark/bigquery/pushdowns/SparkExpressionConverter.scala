@@ -221,6 +221,31 @@ abstract class SparkExpressionConverter {
           blockStatement(
             convertStatement(date, fields) + s", ${format.toString()}"
           )
+
+      /**
+       * --- spark.sql(
+       * ---   "select aiq_day_start(1460080000000, 'America/New_York', 2)"
+       * --- ).as[Long].collect.head == 1460174400000L
+       *
+       * SELECT DATE_PART(
+       *   'EPOCH_MILLISECOND',
+       *   DATE_TRUNC(
+       *     'DAY',
+       *     DATEADD(
+       *       day,
+       *       2,
+       *       CONVERT_TIMEZONE(
+       *         'America/New_York',
+       *         1460080000000::varchar
+       *       )
+       *     )
+       *   )
+       * )
+       * -- 1460174400000
+       */
+      case AiqDayStart(timestamp, timezone, plusDays) =>
+        ???
+
       /**
        * --- spark.sql(
        * ---   """select aiq_day_diff(1693609200000, 1693616400000, 'UTC')"""
