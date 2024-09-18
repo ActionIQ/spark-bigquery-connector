@@ -227,7 +227,10 @@ public class QueryPushdownIntegrationTestBase extends SparkBigQueryIntegrationTe
                 "TAN(0) as Tan",
                 "TANH(0) as Tanh",
                 "ISNAN(word_count) as IsNan",
-                "SIGNUM(word_count) as Signum")
+                "SIGNUM(word_count) as Signum",
+                "MD5(word)",
+                "SHA1(word)",
+                "SHA2(word, 256)")
             .where("word_count = 10 and word = 'glass'");
     List<Row> result = df.collectAsList();
     Row r1 = result.get(0);
@@ -253,6 +256,10 @@ public class QueryPushdownIntegrationTestBase extends SparkBigQueryIntegrationTe
     assertThat(r1.get(20)).isEqualTo(0.0); // TANH(0)
     assertThat(r1.get(21)).isEqualTo(false); // ISNAN(word_count)
     assertThat(r1.get(22)).isEqualTo(1.0); // SIGNUM(word_count)
+    assertThat(r1.getString(23) == "JXDJGfXvHXCR8PZtVNrJdA=="); // MD5(word)
+    assertThat(r1.getString(24) == "Fw/X6EobL5cjcwEC0OkFF6kXWII="); // SHA1(word)
+    assertThat(
+        r1.getString(25) == "EyoaORzOGBxJCixDUFlyIfrZriB3FNH5oQ9nvLHIKI0="); // SHA2(word, 256)
   }
 
   @Test
