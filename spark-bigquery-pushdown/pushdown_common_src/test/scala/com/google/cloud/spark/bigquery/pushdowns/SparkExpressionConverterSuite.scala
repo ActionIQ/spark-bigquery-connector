@@ -967,7 +967,7 @@ class SparkExpressionConverterSuite extends AnyFunSuite with BeforeAndAfter {
     val bigQuerySQLStatement = expressionConverter.convertDateExpressions(exp, fields)
     assert(bigQuerySQLStatement.get.toString ==
       "UNIX_MILLIS ( TIMESTAMP ( DATETIME_TRUNC ( DATETIME_ADD ( DATETIME ( TIMESTAMP_MILLIS ( " +
-      "STARTMS ) , 'America/New_York' ) , INTERVAL 2 DAY ) , DAY ) , 'America/New_York' ) )"
+      "STARTMS ) , 'America/New_York' ) , INTERVAL 2  DAY ) , DAY ) , 'America/New_York' ) )"
     )
   }
 
