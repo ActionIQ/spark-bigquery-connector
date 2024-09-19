@@ -1282,6 +1282,29 @@ public class QueryPushdownIntegrationTestBase extends SparkBigQueryIntegrationTe
             "2019-09-01 02:50:50:52")));
   }
 
+  /**
+   * Reading from a BigQuery table created with (note selects will not keep the order, so sort by
+   * id):
+   *
+   * <p>create or replace table aiq-dev.connector_dev.dt4 (ts bigint, tz string, pd int)
+   *
+   * <p>insert into aiq-dev.connector_dev.dt4 values(1460080000000, 'America/New_York', 2) insert
+   * into aiq-dev.connector_dev.dt4 values(1460080000000, 'Asia/Tokyo', -1)
+   */
+  @Test
+  public void testAiqDayStart() {
+    Dataset<Row> df = readTestDataFromBigQuery("connector_dev", "connector_dev.dt4");
+    df.createOrReplaceTempView("dt4");
+
+    List<Long> results =
+        spark.sql("select aiq_day_start(ts, tz, pd), tz from dt4 order by tz").collectAsList()
+            .stream()
+            .map(r -> r.getLong(0))
+            .collect(Collectors.toList());
+
+    assert (results.equals(Arrays.asList(1460174400000L, 1459954800000L)));
+  }
+
   /** Test for AIQ EXE-2026 */
   @Test
   public void testSourceQuery() {

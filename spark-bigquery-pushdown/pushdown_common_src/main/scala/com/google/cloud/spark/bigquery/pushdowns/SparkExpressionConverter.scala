@@ -221,6 +221,43 @@ abstract class SparkExpressionConverter {
           blockStatement(
             convertStatement(date, fields) + s", ${format.toString()}"
           )
+
+      /**
+       * --- spark.sql(
+       * ---   "select aiq_day_start(1460080000000, 'America/New_York', 2)"
+       * --- ).as[Long].collect.head == 1460174400000L
+       *
+       * SELECT UNIX_MILLIS(
+       *   TIMESTAMP(
+       *     DATETIME_TRUNC(
+       *       DATETIME_ADD(
+       *         DATETIME(TIMESTAMP_MILLIS(1460080000000), 'America/New_York'),
+       *         INTERVAL 2 DAY
+       *       ),
+     *         DAY
+       *     ),
+       *     'America/New_York'
+       *   )
+       * )
+       * 1460174400000
+       */
+      case AiqDayStart(timestamp, timezone, plusDays) =>
+        val tzStmt = convertStatement(timezone, fields)
+        val innerTsm = ConstantString("TIMESTAMP_MILLIS") + blockStatement(convertStatement(timestamp, fields))
+        val innerDt = ConstantString("DATETIME") + blockStatement(
+          innerTsm + "," + tzStmt
+        )
+        val dtAdd = ConstantString("DATETIME_ADD") + blockStatement(
+          innerDt + ", INTERVAL " + convertStatement(plusDays, fields) + " DAY"
+        )
+        val dtTrunc = ConstantString("DATETIME_TRUNC") + blockStatement(
+          dtAdd + ", DAY"
+        )
+        val outerTs = ConstantString("TIMESTAMP") + blockStatement(
+          dtTrunc + "," + tzStmt
+        )
+        ConstantString("UNIX_MILLIS") + blockStatement(outerTs)
+
       /**
        * --- spark.sql(
        * ---   """select aiq_day_diff(1693609200000, 1693616400000, 'UTC')"""
