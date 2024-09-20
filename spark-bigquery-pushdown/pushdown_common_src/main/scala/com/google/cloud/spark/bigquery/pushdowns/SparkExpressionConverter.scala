@@ -288,7 +288,7 @@ abstract class SparkExpressionConverter {
       case AiqDateToString(timestamp, dateFormat, timezoneId) if dateFormat.foldable =>
         val tsMillisStmt = ConstantString("TIMESTAMP_MILLIS") + blockStatement(convertStatement(timestamp, fields))
         val datetimeStmt = ConstantString("DATETIME") + blockStatement(tsMillisStmt + "," + convertStatement(timezoneId, fields))
-        val fixedFormat = isoDateFmtToBigQuery(dateFormat.toString)
+        val fixedFormat = isoDateFmtToBigQueryFormat(dateFormat.toString)
         val formatStr = s"""AS STRING FORMAT "$fixedFormat""""
         ConstantString("CAST") + blockStatement(datetimeStmt + formatStr)
 
@@ -305,7 +305,7 @@ abstract class SparkExpressionConverter {
        * -- 1567363852000
        */
       case AiqStringToDate(dateStr, format, timezone) if format.foldable =>
-        val newFormat = isoDateFmtToDateTime(format.toString)
+        val newFormat = isoDateFmtToBigQueryParse(format.toString)
         val parsedDt = ConstantString("PARSE_DATETIME") + blockStatement(
            convertStatement(Literal(newFormat), fields) + "," + convertStatement(dateStr, fields)
         )
@@ -323,11 +323,11 @@ abstract class SparkExpressionConverter {
    *
    * https://en.wikipedia.org/wiki/ISO_8601#Times
    *
-   * To Bigquery parse format:
+   * To Bigquery parse language:
    *
    * https://cloud.google.com/bigquery/docs/reference/standard-sql/format-elements#format_date_time_as_string
    */
-  private def isoDateFmtToDateTime(isoFormat: String): String = {
+  private def isoDateFmtToBigQueryParse(format: String): String = {
     // be careful with the order here, you dont want mmM -> %MM -> %%m
     val formatMap = Map(
       "YYYY" -> "%Y", // Four-digit year
@@ -364,11 +364,11 @@ abstract class SparkExpressionConverter {
    *
    * https://en.wikipedia.org/wiki/ISO_8601#Times
    *
-   * To Bigquery datetime string format:
+   * To Bigquery format language:
    *
    * https://cloud.google.com/bigquery/docs/reference/standard-sql/format-elements#format_date_time_as_string
    */
-  private def isoDateFmtToBigQuery(format: String): String = {
+  private def isoDateFmtToBigQueryFormat(format: String): String = {
     // be careful with the order here, you dont want MMM -> Month -> MMonth
     format
       // Two-digit month => M -> MM
