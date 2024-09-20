@@ -401,7 +401,7 @@ public class QueryPushdownIntegrationTestBase extends SparkBigQueryIntegrationTe
     assertThat(r1.get(8)).isEqualTo(true); // In
   }
 
-  @Ignore("TODO: give this more memory")
+  @Test("TODO: give this more memory")
   public void testWindowStatements() {
     Dataset<Row> df =
         spark
@@ -1167,6 +1167,32 @@ public class QueryPushdownIntegrationTestBase extends SparkBigQueryIntegrationTe
             .sql("select aiq_day_diff(ts1, unix_timestamp() * 1000, 'UTC') from dt")
             .collectAsList();
     assert ((int) diff2.get(0).get(0) > 10); // 2023-09-01 to current
+  }
+
+  /**
+   * Reading from a BigQuery table created with:
+   *
+   * <p>create or replace table aiq-dev.connector_dev.dt5 (date_str string, format string, tz
+   * string)
+   *
+   * <p>insert into aiq-dev.connector_dev.dt5 values ('2019-09-01 14:50', 'yyyy-MM-dd HH:mm',
+   * 'America/New_York'), ('2019-09-01 02:50 PM', 'yyyy-MM-dd hh:mm a', 'America/New_York'),
+   * ('2019-09-01 PM 02:50', 'yyyy-MM-dd a hh:mm', 'America/New_York')
+   */
+  @Test
+  public void testAiqStringToDate() {
+    Dataset<Row> df = readTestDataFromBigQuery("connector_dev", "connector_dev.dt5");
+    df.createOrReplaceTempView("dt5");
+
+    List<Long> results =
+        spark
+            .sql(
+                "select aiq_string_to_date(date_str, format, tz), date_str from dt5 order by date_str")
+            .collectAsList().stream()
+            .map(r -> r.getLong(0))
+            .collect(Collectors.toList());
+
+    assert (results.equals(Arrays.asList(1567363800000L, 1567363800000L, 1567363800000L)));
   }
 
   /**

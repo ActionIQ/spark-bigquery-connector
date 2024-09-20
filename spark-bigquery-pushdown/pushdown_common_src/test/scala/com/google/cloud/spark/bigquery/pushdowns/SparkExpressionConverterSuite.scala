@@ -4,7 +4,7 @@ import com.google.cloud.bigquery.connector.common.BigQueryPushdownUnsupportedExc
 import com.google.cloud.spark.bigquery.direct.DirectBigQueryRelation
 import com.google.cloud.spark.bigquery.pushdowns.TestConstants.expressionConverter
 import org.apache.spark.sql.catalyst.expressions.aggregate._
-import org.apache.spark.sql.catalyst.expressions.{Abs, Conv, Md5, Sha1, Sha2, Acos, AiqDateToString, AiqDayDiff, AiqDayStart, Alias, And, Ascending, Ascii, Asin, Atan, AttributeReference, Base64, BitwiseAnd, BitwiseNot, BitwiseOr, BitwiseXor, CaseWhen, Cast, Coalesce, Concat, Contains, Cos, Cosh, DateAdd, DateSub, DenseRank, Descending, EndsWith, EqualNullSafe, EqualTo, Exp, ExprId, Floor, FormatNumber, FormatString, GreaterThan, GreaterThanOrEqual, Greatest, If, In, InitCap, InSet, IsNaN, IsNotNull, IsNull, Least, Length, LessThan, LessThanOrEqual, Literal, Log10, Logarithm, Lower, Month, Not, Or, PercentRank, Pi, Pow, PromotePrecision, Quarter, Rand, Rank, RegExpExtract, RegExpReplace, Round, RowNumber, ShiftLeft, ShiftRight, Signum, Sin, Sinh, SortOrder, SoundEx, Sqrt, StartsWith, StringInstr, StringLPad, StringRPad, StringTranslate, StringTrim, StringTrimLeft, StringTrimRight, Substring, Tan, Tanh, TruncDate, UnBase64, UnscaledValue, Upper, Year}
+import org.apache.spark.sql.catalyst.expressions.{Abs, Conv, Md5, Sha1, Sha2, Acos, AiqDateToString, AiqDayDiff, AiqDayStart, AiqStringToDate, Alias, And, Ascending, Ascii, Asin, Atan, AttributeReference, Base64, BitwiseAnd, BitwiseNot, BitwiseOr, BitwiseXor, CaseWhen, Cast, Coalesce, Concat, Contains, Cos, Cosh, DateAdd, DateSub, DenseRank, Descending, EndsWith, EqualNullSafe, EqualTo, Exp, ExprId, Floor, FormatNumber, FormatString, GreaterThan, GreaterThanOrEqual, Greatest, If, In, InitCap, InSet, IsNaN, IsNotNull, IsNull, Least, Length, LessThan, LessThanOrEqual, Literal, Log10, Logarithm, Lower, Month, Not, Or, PercentRank, Pi, Pow, PromotePrecision, Quarter, Rand, Rank, RegExpExtract, RegExpReplace, Round, RowNumber, ShiftLeft, ShiftRight, Signum, Sin, Sinh, SortOrder, SoundEx, Sqrt, StartsWith, StringInstr, StringLPad, StringRPad, StringTranslate, StringTrim, StringTrimLeft, StringTrimRight, Substring, Tan, Tanh, TruncDate, UnBase64, UnscaledValue, Upper, Year}
 import org.apache.spark.sql.types._
 import org.mockito.{Mock, MockitoAnnotations}
 import org.scalatest.BeforeAndAfter
@@ -991,6 +991,18 @@ class SparkExpressionConverterSuite extends AnyFunSuite with BeforeAndAfter {
     val bigQuerySQLStatement = expressionConverter.convertDateExpressions(exp, fields)
     assert(bigQuerySQLStatement.get.toString == "DATE_DIFF ( DATE ( TIMESTAMP_MILLIS ( 1695945601000 ) , 'UTC' ) , " +
         "DATE ( TIMESTAMP_MILLIS ( STARTMS ) , 'UTC' ) , DAY )"
+    )
+  }
+
+  test("convertDateExpressions with AiqStringToDate") {
+    val exp = AiqStringToDate(
+      schoolNameAttributeReference,
+      Literal("yyyy-MM-dd HH:mm:ss"),
+      Literal("America/New_York")
+    )
+    val bigQuerySQLStatement = expressionConverter.convertDateExpressions(exp, fields)
+    assert(bigQuerySQLStatement.get.toString ==
+      "UNIX_MILLIS ( TIMESTAMP ( PARSE_DATETIME ( '%Y-%m-%d %H:%M:%S' , SCHOOLNAME ) , 'America/New_York' ) )"
     )
   }
 

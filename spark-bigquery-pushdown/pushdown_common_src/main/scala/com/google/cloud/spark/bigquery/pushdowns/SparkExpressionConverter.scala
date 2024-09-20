@@ -292,6 +292,28 @@ abstract class SparkExpressionConverter {
         val formatStr = s"""AS STRING FORMAT "$fixedFormat""""
         ConstantString("CAST") + blockStatement(datetimeStmt + formatStr)
 
+      /**
+       * --- spark.sql(
+       * ---   "select aiq_string_to_date('2019-09-01 14:50:52', 'yyyy-MM-dd HH:mm:ss', 'America/New_York')"
+       * --- ).as[Long].collect.head == 1567363852000L
+       *
+       * SELECT UNIX_MILLIS(
+       *   TIMESTAMP(
+       *     PARSE_DATETIME('%Y-%m-%d %H:%M:%S', '2019-09-01 14:50:52'),
+       *     'America/New_York'))
+       *
+       * -- 1567363852000
+       */
+      case AiqStringToDate(dateStr, format, timezone) if format.foldable =>
+        val newFormat = isoDateFmtToDateTime(format.toString)
+        val parsedDt = ConstantString("PARSE_DATETIME") + blockStatement(
+           convertStatement(Literal(newFormat), fields) + "," + convertStatement(dateStr, fields)
+        )
+        val timestampInZone = ConstantString("TIMESTAMP") + blockStatement(
+          parsedDt + "," + convertStatement(timezone, fields)
+        )
+        ConstantString("UNIX_MILLIS") + blockStatement(timestampInZone)
+
       case _ => null
     })
   }
@@ -301,7 +323,48 @@ abstract class SparkExpressionConverter {
    *
    * https://en.wikipedia.org/wiki/ISO_8601#Times
    *
-   * To Bigquery date format:
+   * To Bigquery parse format:
+   *
+   * https://cloud.google.com/bigquery/docs/reference/standard-sql/format-elements#format_date_time_as_string
+   */
+  private def isoDateFmtToDateTime(isoFormat: String): String = {
+    // be careful with the order here, you dont want mmM -> %MM -> %%m
+    val formatMap = Map(
+      "YYYY" -> "%Y", // Four-digit year
+      "yyyy" -> "%Y", // Four-digit year (alternative)
+      "YY" -> "%y",   // Two-digit year
+      "MM" -> "%m",   // Two-digit month
+      "dd" -> "%d",   // Two-digit day
+      "DD" -> "%d",   // Two-digit day
+      "HH" -> "%H",   // Two-digit hour (24-hour format)
+      "hh" -> "%I",   // Two-digit hour (12-hour format)
+      "mm" -> "%M",   // Two-digit minute
+      "ss" -> "%S",   // Two-digit second
+      "SSS" -> "%f",  // Milliseconds
+      "Z" -> "%Z"     // UTC offset
+    )
+
+    def replaceFormat(str: String, map: Map[String, String]): String = {
+      map.foldLeft(str) { case (acc, (key, value)) =>
+        acc.replace(key, value)
+      }
+    }
+
+    // Replace ISO 8601 specifiers with BigQuery specifiers
+    val transformed = formatMap.foldLeft(isoFormat) { case (last, (nextFmtKey, nextFmtVal)) =>
+      last.replace(nextFmtKey, nextFmtVal)
+    }
+
+    // Handle fractional seconds
+    transformed.replace(".S", ".%f")
+  }
+
+  /**
+   * Function to convert a ISO date format:
+   *
+   * https://en.wikipedia.org/wiki/ISO_8601#Times
+   *
+   * To Bigquery datetime string format:
    *
    * https://cloud.google.com/bigquery/docs/reference/standard-sql/format-elements#format_date_time_as_string
    */
