@@ -92,7 +92,9 @@ public class QueryPushdownIntegrationTestBase extends SparkBigQueryIntegrationTe
                 "SOUNDEX(word) as soundex",
                 "LIKE(word, '%aug%urs%') as like_with_percent",
                 "LIKE(word, 'a_g_rs') as like_with_underscore",
-                "LIKE(word, 'b_g_rs') as like_with_underscore_return_false")
+                "LIKE(word, 'b_g_rs') as like_with_underscore_return_false",
+                "FORMAT_NUMBER(CAST((word_count + 10000) AS FLOAT)/6, 3)",
+                "FORMAT_NUMBER(word_count + 10000, 0)")
             .where("word = 'augurs'");
     List<Row> result = df.collectAsList();
     Row r1 = result.get(0);
@@ -120,6 +122,8 @@ public class QueryPushdownIntegrationTestBase extends SparkBigQueryIntegrationTe
     assertThat(r1.get(20)).isEqualTo(true); // LIKE(word, '%aug%urs%')
     assertThat(r1.get(21)).isEqualTo(true); // LIKE(word, 'a_g_rs')
     assertThat(r1.get(22)).isEqualTo(false); // LIKE(word, 'b_g_rs')
+    assertThat(r1.getString(23) == "1,666.833");
+    assertThat(r1.getString(24) == "10,001");
   }
 
   @Test
@@ -230,7 +234,8 @@ public class QueryPushdownIntegrationTestBase extends SparkBigQueryIntegrationTe
                 "SIGNUM(word_count) as Signum",
                 "MD5(word)",
                 "SHA1(word)",
-                "SHA2(word, 256)")
+                "SHA2(word, 256)",
+                "CONV(SUBSTRING(CAST(MD5(word) AS STRING), 0, 5), 16, 10)")
             .where("word_count = 10 and word = 'glass'");
     List<Row> result = df.collectAsList();
     Row r1 = result.get(0);
@@ -260,6 +265,7 @@ public class QueryPushdownIntegrationTestBase extends SparkBigQueryIntegrationTe
     assertThat(r1.getString(24) == "Fw/X6EobL5cjcwEC0OkFF6kXWII="); // SHA1(word)
     assertThat(
         r1.getString(25) == "EyoaORzOGBxJCixDUFlyIfrZriB3FNH5oQ9nvLHIKI0="); // SHA2(word, 256)
+    assertThat(r1.getString(26) == "153356");
   }
 
   @Test

@@ -339,6 +339,30 @@ abstract class SparkExpressionConverter {
            _: Sqrt | _: Tan | _: Tanh =>
         ConstantString(expression.prettyName.toUpperCase) + blockStatement(convertStatements(fields, expression.children: _*))
 
+      case Remainder(a, b, _) =>
+        ConstantString("MOD") + blockStatement(
+          convertStatement(a, fields) + "," + convertStatement(b, fields)
+        )
+
+      /**
+       * Only supporting 16 -> 10 for now
+       *
+       *  spark.sql("select conv('fd33e2e8ad', 16, 10)").collect
+       *  1087497234605
+       *
+       *  SELECT CAST(CAST(CONCAT('0x', 'fd33e2e8ad') AS INT64) AS STRING)
+       */
+      case Conv(numberStr, fromBase, toBase) if
+          fromBase.foldable && fromBase.toString == "16" && toBase.foldable && toBase.toString == "10" =>
+        val newExp = Cast(
+          Cast(
+            Concat(Seq(Literal("0x"), numberStr)),
+            LongType
+          ),
+          StringType
+        )
+        convertStatement(newExp, fields)
+
       // These hash functions all return bytes, so must convert to hex string
 
       // SELECT TO_HEX(MD5("Spark"))
@@ -460,7 +484,39 @@ abstract class SparkExpressionConverter {
         ConstantString("REGEXP_EXTRACT") + blockStatement(convertStatement(child, fields) + "," + s"r'${pattern.toString}'" + "," + convertStatement(idx, fields))
      case _: RegExpReplace =>
         ConstantString("REGEXP_REPLACE") + blockStatement(convertStatement(expression.children.head, fields) + "," + s"r'${expression.children(1).toString}'" + "," + s"'${expression.children(2).toString}'")
-      case _: FormatString | _: FormatNumber =>
+
+      /**
+       * Only support reducing decimal places, not full formatting, and special casing
+       * decimalPlaces=0 to make logic simpler
+       *
+       * spark.sql("SELECT format_number(12332.123456, 4)").collect
+       * -- 12,332.1235
+       * scala> spark.sql("select format_number(123, 4)").collect
+       * -- 123.0000
+       * scala> spark.sql("select format_number(4567.123, 0)").collect
+       * -- 4,567
+       *
+       * select CONCAT(
+       *     FORMAT("%'d", CAST(CAST('12332.123456' AS NUMERIC) AS INT64)),
+       *     SUBSTRING(FORMAT("%.4f", MOD(CAST('12332.123456' AS NUMERIC), 1)), 2, 5)
+       * )
+       */
+      case FormatNumber(numberExp, decimalPlacesExp)
+          if decimalPlacesExp.foldable && decimalPlacesExp.dataType == IntegerType && decimalPlacesExp.toString == "0" =>
+        val firstPart = FormatString(Literal("%'d"), Cast(Cast(numberExp, FloatType), LongType))
+        convertStatement(firstPart, fields)
+
+      case FormatNumber(numberExp, decimalPlacesExp)
+          if decimalPlacesExp.foldable && decimalPlacesExp.dataType == IntegerType =>
+        val firstPart = FormatString(Literal("%\'d"), Cast(Cast(numberExp, FloatType), LongType))
+        val secondPart = Substring(
+          FormatString(Literal("%.4f"), Remainder(Cast(numberExp, FloatType), Literal(1))),
+          Literal(2),
+          Literal(decimalPlacesExp.toString.toInt + 1)
+        )
+        convertStatement(Concat(Seq(firstPart, secondPart)), fields)
+
+      case _: FormatString =>
         ConstantString("FORMAT") + blockStatement(convertStatements(fields, expression.children: _*))
       case _: Base64 =>
         ConstantString("TO_BASE64") + blockStatement(convertStatements(fields, expression.children: _*))
