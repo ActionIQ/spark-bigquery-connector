@@ -401,7 +401,7 @@ public class QueryPushdownIntegrationTestBase extends SparkBigQueryIntegrationTe
     assertThat(r1.get(8)).isEqualTo(true); // In
   }
 
-  @Test("TODO: give this more memory")
+  @Ignore("TODO: give this more memory")
   public void testWindowStatements() {
     Dataset<Row> df =
         spark
