@@ -344,14 +344,8 @@ abstract class SparkExpressionConverter {
       "Z" -> "%Z"     // UTC offset
     )
 
-    def replaceFormat(str: String, map: Map[String, String]): String = {
-      map.foldLeft(str) { case (acc, (key, value)) =>
-        acc.replace(key, value)
-      }
-    }
-
     // Replace ISO 8601 specifiers with BigQuery specifiers
-    val transformed = formatMap.foldLeft(isoFormat) { case (last, (nextFmtKey, nextFmtVal)) =>
+    val transformed = formatMap.foldLeft(format) { case (last, (nextFmtKey, nextFmtVal)) =>
       last.replace(nextFmtKey, nextFmtVal)
     }
 
