@@ -1293,6 +1293,7 @@ The user/password for Artifactory should come from ~/.m2/settings.xml, which was
 Download / create a JSON file containing real GCP credentials
 ```
 export GOOGLE_APPLICATION_CREDENTIALS=<path to json file>
+export GOOGLE_CLOUD_PROJECT=aiq-dev
 ```
 
 # Version
@@ -1311,14 +1312,7 @@ Run all tests except acceptance test and integration tests
 ```
 
 # Integration Tests
-To run integration test with `aiq-dev` BigQuery instance, download the service account credentials to a local
-file, then run
-```
-export GOOGLE_APPLICATION_CREDENTIALS=<path_to_the_file>
-export GOOGLE_CLOUD_PROJECT=aiq-dev
-```
 
-Run integration tests:
 ```
 # make sure to do this after updating tests - for some reason failsafe:integration-test doesn't compile tests before running
 ./mvnw install -Pintegration -DskipTests
