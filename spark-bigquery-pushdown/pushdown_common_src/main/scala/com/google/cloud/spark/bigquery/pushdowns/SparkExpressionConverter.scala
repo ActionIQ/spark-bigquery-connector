@@ -103,7 +103,7 @@ abstract class SparkExpressionConverter {
             ConstantString("COALESCE") + blockStatement( ConstantString("CAST") + blockStatement(convertStatement(right, fields) + ConstantString("AS STRING") ) + "," + ConstantString("\"\"") )
         )
 
-      // Bigquery does not support '%' => MOD
+      // Bigquery does not support '%'
       // https://cloud.google.com/bigquery/docs/reference/standard-sql/operators
       case Remainder(a, b, _) =>
         ConstantString("MOD") + blockStatement(
