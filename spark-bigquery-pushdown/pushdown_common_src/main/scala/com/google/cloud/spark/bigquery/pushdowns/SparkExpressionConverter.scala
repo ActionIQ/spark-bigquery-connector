@@ -103,7 +103,14 @@ abstract class SparkExpressionConverter {
             ConstantString("COALESCE") + blockStatement( ConstantString("CAST") + blockStatement(convertStatement(right, fields) + ConstantString("AS STRING") ) + "," + ConstantString("\"\"") )
         )
 
-      case b@BinaryOperator(left, right) =>
+      // Bigquery does not support '%' => MOD
+      // https://cloud.google.com/bigquery/docs/reference/standard-sql/operators
+      case Remainder(a, b, _) =>
+        ConstantString("MOD") + blockStatement(
+          convertStatement(a, fields) + "," + convertStatement(b, fields)
+        )
+
+      case b @ BinaryOperator(left, right) =>
         blockStatement(
           convertStatement(left, fields) + b.symbol + convertStatement(right, fields)
         )
@@ -554,18 +561,18 @@ abstract class SparkExpressionConverter {
        * -- 4,567
        *
        * select CONCAT(
-       *     FORMAT("%'d", CAST(CAST('12332.123456' AS NUMERIC) AS INT64)),
+       *     FORMAT("%'d", CAST('12332.123456' AS INT64)),
        *     SUBSTRING(FORMAT("%.4f", MOD(CAST('12332.123456' AS NUMERIC), 1)), 2, 5)
        * )
        */
       case FormatNumber(numberExp, decimalPlacesExp)
           if decimalPlacesExp.foldable && decimalPlacesExp.dataType == IntegerType && decimalPlacesExp.toString == "0" =>
-        val firstPart = FormatString(Literal("%\\\'d"), Cast(Cast(numberExp, FloatType), LongType))
+        val firstPart = FormatString(Literal("%\\\'d"), Cast(numberExp, LongType))
         convertStatement(firstPart, fields)
 
       case FormatNumber(numberExp, decimalPlacesExp)
           if decimalPlacesExp.foldable && decimalPlacesExp.dataType == IntegerType =>
-        val firstPart = FormatString(Literal("%\\\'d"), Cast(Cast(numberExp, FloatType), LongType))
+        val firstPart = FormatString(Literal("%\\\'d"), Cast(numberExp, LongType))
         val secondPart = Substring(
           FormatString(Literal("%.4f"), Remainder(Cast(numberExp, FloatType), Literal(1))),
           Literal(2),
