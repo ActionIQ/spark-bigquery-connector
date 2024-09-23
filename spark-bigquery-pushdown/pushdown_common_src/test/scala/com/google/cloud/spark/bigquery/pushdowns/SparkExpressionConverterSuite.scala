@@ -501,7 +501,7 @@ class SparkExpressionConverterSuite extends AnyFunSuite with BeforeAndAfter {
   test("convertStringExpressions with FormatNumber") {
     val formatNumberExpression = FormatNumber.apply(Literal(1245.3456), Literal(2))
     val bigQuerySQLStatement = expressionConverter.convertStringExpressions(formatNumberExpression, fields)
-    val firstPart = "FORMAT ( '%'d' , CAST ( CAST ( 1245.3456 AS FLOAT64 ) AS INT64 ) )"
+    val firstPart = "FORMAT ( '%\\'d' , CAST ( CAST ( 1245.3456 AS FLOAT64 ) AS INT64 ) )"
     val secondPart = "SUBSTRING ( FORMAT ( '%.4f' , ( CAST ( 1245.3456 AS FLOAT64 ) % 1 ) ) , 2 , 3 )"
     assert(bigQuerySQLStatement.get.toString == s"CONCAT ( $firstPart , $secondPart )")
   }
@@ -510,7 +510,7 @@ class SparkExpressionConverterSuite extends AnyFunSuite with BeforeAndAfter {
     val formatNumberExpression = FormatNumber.apply(Literal(1234.3456), Literal(0))
     val bigQuerySQLStatement = expressionConverter.convertStringExpressions(formatNumberExpression, fields)
     assert(bigQuerySQLStatement.isDefined)
-    assert(bigQuerySQLStatement.get.toString == "FORMAT ( '%\'d' , CAST ( CAST ( 1234.3456 AS FLOAT64 ) AS INT64 ) )")
+    assert(bigQuerySQLStatement.get.toString == "FORMAT ( '%\\'d' , CAST ( CAST ( 1234.3456 AS FLOAT64 ) AS INT64 ) )")
   }
 
   test("convertMathematicalExpressions with conv") {

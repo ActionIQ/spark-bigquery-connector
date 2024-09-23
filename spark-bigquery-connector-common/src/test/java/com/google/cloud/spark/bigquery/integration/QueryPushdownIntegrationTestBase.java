@@ -122,8 +122,8 @@ public class QueryPushdownIntegrationTestBase extends SparkBigQueryIntegrationTe
     assertThat(r1.get(20)).isEqualTo(true); // LIKE(word, '%aug%urs%')
     assertThat(r1.get(21)).isEqualTo(true); // LIKE(word, 'a_g_rs')
     assertThat(r1.get(22)).isEqualTo(false); // LIKE(word, 'b_g_rs')
-    assertThat(r1.getString(23) == "1,666.833");
-    assertThat(r1.getString(24) == "10,001");
+    assertThat(r1.getString(23).equals("1,666.833"));
+    assertThat(r1.getString(24).equals("10,001"));
   }
 
   @Test
