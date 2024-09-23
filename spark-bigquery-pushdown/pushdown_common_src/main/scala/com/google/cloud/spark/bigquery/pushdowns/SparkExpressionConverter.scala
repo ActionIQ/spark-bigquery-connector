@@ -560,12 +560,12 @@ abstract class SparkExpressionConverter {
        */
       case FormatNumber(numberExp, decimalPlacesExp)
           if decimalPlacesExp.foldable && decimalPlacesExp.dataType == IntegerType && decimalPlacesExp.toString == "0" =>
-        val firstPart = FormatString(Literal("%'d"), Cast(Cast(numberExp, FloatType), LongType))
+        val firstPart = FormatString(Literal("%\\'d"), Cast(Cast(numberExp, FloatType), LongType))
         convertStatement(firstPart, fields)
 
       case FormatNumber(numberExp, decimalPlacesExp)
           if decimalPlacesExp.foldable && decimalPlacesExp.dataType == IntegerType =>
-        val firstPart = FormatString(Literal("%\'d"), Cast(Cast(numberExp, FloatType), LongType))
+        val firstPart = FormatString(Literal("%\\'d"), Cast(Cast(numberExp, FloatType), LongType))
         val secondPart = Substring(
           FormatString(Literal("%.4f"), Remainder(Cast(numberExp, FloatType), Literal(1))),
           Literal(2),
