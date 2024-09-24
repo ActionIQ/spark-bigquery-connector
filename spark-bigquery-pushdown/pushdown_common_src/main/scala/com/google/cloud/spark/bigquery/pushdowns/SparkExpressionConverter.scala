@@ -534,6 +534,8 @@ abstract class SparkExpressionConverter {
     })
   }
 
+  private def isIntegralType(dt: DataType): Boolean = dt.isInstanceOf[LongType] || dt.isInstanceOf[IntegerType]
+
   def convertStringExpressions(expression: Expression, fields: Seq[Attribute]): Option[BigQuerySQLStatement] = {
     Option(expression match {
       case _: Ascii | _: Concat | _: Length | _: Lower |
@@ -566,12 +568,12 @@ abstract class SparkExpressionConverter {
        * )
        */
       case FormatNumber(numberExp, decimalPlacesExp)
-          if decimalPlacesExp.foldable && decimalPlacesExp.dataType == IntegerType && decimalPlacesExp.toString == "0" =>
+          if decimalPlacesExp.foldable && isIntegralType(decimalPlacesExp.dataType) && decimalPlacesExp.toString == "0" =>
         val firstPart = FormatString(Literal("%\\\'d"), Cast(numberExp, LongType))
         convertStatement(firstPart, fields)
 
       case FormatNumber(numberExp, decimalPlacesExp)
-          if decimalPlacesExp.foldable && decimalPlacesExp.dataType == IntegerType =>
+          if decimalPlacesExp.foldable && isIntegralType(decimalPlacesExp.dataType) =>
         val firstPart = FormatString(Literal("%\\\'d"), Cast(numberExp, LongType))
         val secondPart = Substring(
           FormatString(Literal("%.4f"), Remainder(Cast(numberExp, FloatType), Literal(1))),
