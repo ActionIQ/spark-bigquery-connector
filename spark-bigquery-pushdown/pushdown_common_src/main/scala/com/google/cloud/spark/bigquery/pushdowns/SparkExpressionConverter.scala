@@ -332,32 +332,41 @@ abstract class SparkExpressionConverter {
    *
    * To Bigquery parse language:
    *
-   * https://cloud.google.com/bigquery/docs/reference/standard-sql/format-elements#format_date_time_as_string
+   * https://cloud.google.com/bigquery/docs/reference/standard-sql/format-elements#format_elements_date_time
    */
   private def isoDateFmtToBigQueryParse(format: String): String = {
-    // be careful with the order here, you dont want mmM -> %MM -> %%m
-    val formatMap = Seq(
-      "YYYY" -> "%Y", // Four-digit year
-      "yyyy" -> "%Y", // Four-digit year (alternative)
-      "YY" -> "%y",   // Two-digit year
-      "MM" -> "%m",   // Two-digit month
-      "dd" -> "%d",   // Two-digit day
-      "DD" -> "%d",   // Two-digit day
-      "HH" -> "%H",   // Two-digit hour (24-hour format)
-      "hh" -> "%I",   // Two-digit hour (12-hour format)
-      "mm" -> "%M",   // Two-digit minute
-      "ss" -> "%S",   // Two-digit second
-      "SSS" -> "%f",  // Milliseconds
-      "Z" -> "%Z"     // UTC offset
-    )
-
-    // Replace ISO 8601 specifiers with BigQuery specifiers
-    val transformed = formatMap.foldLeft(format) { case (last, (nextFmtKey, nextFmtVal)) =>
-      last.replace(nextFmtKey, nextFmtVal)
-    }
-
-    // Handle fractional seconds
-    transformed.replace(".S", ".%f")
+    // be careful with the order here, you dont want MMM -> Month -> MMonth
+    format
+      // Full year
+      .replaceAll("y{4,8}", "%Y")
+      .replaceAll("Y{4,8}", "%Y")
+      // Two-digit year
+      .replaceAll("y{2}", "%y")
+      .replaceAll("Y{2}", "%y")
+      // Full month name
+      .replaceAll("M{4,8}", "%B")
+      // Abbreviated month name
+      .replaceAll("M{3}", "%b")
+      // Two-digit month
+      .replaceAll("M{1,2}", "%m")
+      // Two digits for hour (00 through 23)
+      .replaceAll("HH", "%H")
+      // Two digits for hour (01 through 12)
+      .replaceAll("hh", "%I")
+      // Two digits for minute
+      .replaceAll("mm", "%M")
+      // Two digits for second
+      .replaceAll("ss", "%S")
+      // Ante meridiem (am) / post meridiem (pm)
+      .replaceAll("p", "%p")
+      .replaceAll("a", "%p")
+      // Full day of week
+      .replaceAll("E{4,8}", "%A")
+      // Abbreviated day of week
+      .replaceAll("E{1,3}", "%a")
+      // Two digits for day
+      .replaceAll("dd", "%d")
+      .replaceAll("DD", "%d")
   }
 
   /**
@@ -372,27 +381,36 @@ abstract class SparkExpressionConverter {
   private def isoDateFmtToBigQueryFormat(format: String): String = {
     // be careful with the order here, you dont want MMM -> Month -> MMonth
     format
-      // Two-digit month => M -> MM
-      .replaceAll("(?<=[^M])M(?=[^M])", "MM")
-      // Full month name => MMMM... -> Month
-      .replaceAll("(?<=[^M])M{4,8}(?=[^M])", "Month")
-      // Abbreviated month name => MMM -> MON
-      .replaceAll("(?<=[^M])M{3}(?=[^M])", "Mon")
+      // Two-digit year
+      .replaceAll("y{2}", "YY")
+      .replaceAll("Y{2}", "YY")
+      // Full year
+      .replaceAll("y{4,8}", "YYYY")
+      .replaceAll("Y{4,8}", "YYYY")
+      // Two-digit month
+      .replaceAll("M{1,2}", "MM")
+      // Full month name
+      .replaceAll("M{4,8}", "Month")
+      // Abbreviated month name
+      .replaceAll("M{3}", "Mon")
       // Two digits for hour (00 through 23)
       .replaceAll("HH", "HH24")
       // Two digits for hour (01 through 12)
       .replaceAll("hh", "HH12")
-      // Two digits for minute (00 through 59)
+      // Two digits for minute
       .replaceAll("mm", "MI")
-      // Two digits for second (00 through 59)
+      // Two digits for second
       .replaceAll("ss", "SS")
       // Ante meridiem (am) / post meridiem (pm)
+      .replaceAll("p", "AM")
       .replaceAll("a", "AM")
-      .replaceAll("p", "PM")
-      // Full day of week => EEEE... -> Day
-      .replaceAll("(?<=[^E])E{4,8}(?=[^E])", "Day")
-      // Abbreviated day of week => E/EE/EEE -> Dy
-      .replaceAll("(?<=[^E])E{1,3}(?=[^E])", "Dy")
+      // Two digits for day
+      .replaceAll("dd", "DD")
+      .replaceAll("DD", "DD")
+      // Abbreviated day of week
+      .replaceAll("E{1,3}", "Dy")
+      // Full day of week
+      .replaceAll("E{4,8}", "Day")
   }
 
   def convertMathematicalExpressions(expression: Expression, fields: Seq[Attribute]): Option[BigQuerySQLStatement] = {
