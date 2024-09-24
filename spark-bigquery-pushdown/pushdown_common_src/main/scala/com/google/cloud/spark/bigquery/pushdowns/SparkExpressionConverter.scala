@@ -107,7 +107,7 @@ abstract class SparkExpressionConverter {
       // https://cloud.google.com/bigquery/docs/reference/standard-sql/operators
       case Remainder(a, b, _) =>
         ConstantString("MOD") + blockStatement(
-          convertStatement(a, fields) + "," + convertStatement(b, fields)
+          convertStatement(Cast(a, LongType), fields) + "," + convertStatement(Cast(b, LongType), fields)
         )
 
       case b @ BinaryOperator(left, right) =>
@@ -403,11 +403,6 @@ abstract class SparkExpressionConverter {
            _: Sqrt | _: Tan | _: Tanh =>
         ConstantString(expression.prettyName.toUpperCase) + blockStatement(convertStatements(fields, expression.children: _*))
 
-      case Remainder(a, b, _) =>
-        ConstantString("MOD") + blockStatement(
-          convertStatement(a, fields) + "," + convertStatement(b, fields)
-        )
-
       /**
        * Only supporting 16 -> 10 for now
        *
@@ -576,7 +571,7 @@ abstract class SparkExpressionConverter {
           if decimalPlacesExp.foldable && isIntegralType(decimalPlacesExp.dataType) =>
         val firstPart = FormatString(Literal("%\\\'d"), Cast(numberExp, LongType))
         val secondPart = Substring(
-          FormatString(Literal("%.4f"), Remainder(Cast(numberExp, FloatType), Literal(1))),
+          FormatString(Literal("%.4f"), Remainder(numberExp, Literal(1L))),
           Literal(2),
           Literal(decimalPlacesExp.toString.toInt + 1)
         )

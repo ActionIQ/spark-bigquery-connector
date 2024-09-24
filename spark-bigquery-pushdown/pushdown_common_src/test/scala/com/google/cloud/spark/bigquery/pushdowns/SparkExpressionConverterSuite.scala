@@ -4,7 +4,7 @@ import com.google.cloud.bigquery.connector.common.BigQueryPushdownUnsupportedExc
 import com.google.cloud.spark.bigquery.direct.DirectBigQueryRelation
 import com.google.cloud.spark.bigquery.pushdowns.TestConstants.expressionConverter
 import org.apache.spark.sql.catalyst.expressions.aggregate._
-import org.apache.spark.sql.catalyst.expressions.{Abs, Conv, Md5, Sha1, Sha2, Acos, AiqDateToString, AiqDayDiff, AiqDayStart, AiqStringToDate, Alias, And, Ascending, Ascii, Asin, Atan, AttributeReference, Base64, BitwiseAnd, BitwiseNot, BitwiseOr, BitwiseXor, CaseWhen, Cast, Coalesce, Concat, Contains, Cos, Cosh, DateAdd, DateSub, DenseRank, Descending, EndsWith, EqualNullSafe, EqualTo, Exp, ExprId, Floor, FormatNumber, FormatString, GreaterThan, GreaterThanOrEqual, Greatest, If, In, InitCap, InSet, IsNaN, IsNotNull, IsNull, Least, Length, LessThan, LessThanOrEqual, Literal, Log10, Logarithm, Lower, Month, Not, Or, PercentRank, Pi, Pow, PromotePrecision, Quarter, Rand, Rank, RegExpExtract, RegExpReplace, Round, RowNumber, ShiftLeft, ShiftRight, Signum, Sin, Sinh, SortOrder, SoundEx, Sqrt, StartsWith, StringInstr, StringLPad, StringRPad, StringTranslate, StringTrim, StringTrimLeft, StringTrimRight, Substring, Tan, Tanh, TruncDate, UnBase64, UnscaledValue, Upper, Year}
+import org.apache.spark.sql.catalyst.expressions.{Abs, Conv, Md5, Sha1, Sha2, Acos, AiqDateToString, AiqDayDiff, AiqDayStart, AiqStringToDate, Alias, And, Ascending, Ascii, Asin, Atan, AttributeReference, Base64, BitwiseAnd, BitwiseNot, BitwiseOr, BitwiseXor, CaseWhen, Cast, Coalesce, Concat, Contains, Cos, Cosh, DateAdd, DateSub, DenseRank, Descending, EndsWith, EqualNullSafe, EqualTo, Exp, ExprId, Floor, FormatNumber, FormatString, GreaterThan, GreaterThanOrEqual, Greatest, If, In, InitCap, InSet, IsNaN, IsNotNull, IsNull, Least, Length, LessThan, LessThanOrEqual, Literal, Log10, Logarithm, Lower, Month, Not, Or, PercentRank, Pi, Pow, PromotePrecision, Quarter, Rand, Rank, RegExpExtract, RegExpReplace, Remainder, Round, RowNumber, ShiftLeft, ShiftRight, Signum, Sin, Sinh, SortOrder, SoundEx, Sqrt, StartsWith, StringInstr, StringLPad, StringRPad, StringTranslate, StringTrim, StringTrimLeft, StringTrimRight, Substring, Tan, Tanh, TruncDate, UnBase64, UnscaledValue, Upper, Year}
 import org.apache.spark.sql.types._
 import org.mockito.{Mock, MockitoAnnotations}
 import org.scalatest.BeforeAndAfter
@@ -131,6 +131,13 @@ class SparkExpressionConverterSuite extends AnyFunSuite with BeforeAndAfter {
     val nonAggregateExpression = IsNotNull.apply(schoolIdAttributeReference)
     val bigQuerySQLStatement = expressionConverter.convertAggregateExpressions(nonAggregateExpression, fields)
     assert(bigQuerySQLStatement.isEmpty)
+  }
+
+  test("convertBasicExpressions with BinaryOperator (Mod)") {
+    val binaryOperatorExpression = Remainder(schoolIdAttributeReference, Literal.apply(75L, LongType))
+    val bigQuerySQLStatement = expressionConverter.convertBasicExpressions(binaryOperatorExpression, fields)
+    assert(bigQuerySQLStatement.isDefined)
+    assert(bigQuerySQLStatement.get.toString == "MOD ( SUBQUERY_2.SCHOOLID , 75 )")
   }
 
   test("convertBasicExpressions with BinaryOperator (GreaterThanOrEqual)") {
@@ -502,7 +509,7 @@ class SparkExpressionConverterSuite extends AnyFunSuite with BeforeAndAfter {
     val formatNumberExpression = FormatNumber.apply(Literal(1245.3456), Literal(2))
     val bigQuerySQLStatement = expressionConverter.convertStringExpressions(formatNumberExpression, fields)
     val firstPart = "FORMAT ( '%\\'d' , CAST ( 1245.3456 AS INT64 ) )"
-    val secondPart = "SUBSTRING ( FORMAT ( '%.4f' , MOD ( CAST ( 1245.3456 AS FLOAT64 ) , 1 ) ) , 2 , 3 )"
+    val secondPart = "SUBSTRING ( FORMAT ( '%.4f' , MOD ( CAST ( 1245.3456 AS INT64 ) , CAST ( 1 AS INT64 ) ) ) , 2 , 3 )"
     assert(bigQuerySQLStatement.get.toString == s"CONCAT ( $firstPart , $secondPart )")
   }
 
