@@ -137,7 +137,7 @@ class SparkExpressionConverterSuite extends AnyFunSuite with BeforeAndAfter {
     val binaryOperatorExpression = Remainder(schoolIdAttributeReference, Literal.apply(75L, LongType))
     val bigQuerySQLStatement = expressionConverter.convertBasicExpressions(binaryOperatorExpression, fields)
     assert(bigQuerySQLStatement.isDefined)
-    assert(bigQuerySQLStatement.get.toString == "MOD ( SUBQUERY_2.SCHOOLID , 75 )")
+    assert(bigQuerySQLStatement.get.toString == "MOD ( CAST ( SUBQUERY_2.SCHOOLID AS INT64 ) , CAST ( 75 AS INT64 ) )")
   }
 
   test("convertBasicExpressions with BinaryOperator (GreaterThanOrEqual)") {
