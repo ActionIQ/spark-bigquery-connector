@@ -235,7 +235,8 @@ public class QueryPushdownIntegrationTestBase extends SparkBigQueryIntegrationTe
                 "MD5(word)",
                 "SHA1(word)",
                 "SHA2(word, 256)",
-                "CONV(SUBSTRING(CAST(MD5(word) AS STRING), 0, 5), 16, 10)")
+                "CONV(SUBSTRING(CAST(MD5(word) AS STRING), 0, 5), 16, 10)",
+                "word_count % 3")
             .where("word_count = 10 and word = 'glass'");
     List<Row> result = df.collectAsList();
     Row r1 = result.get(0);
@@ -266,6 +267,7 @@ public class QueryPushdownIntegrationTestBase extends SparkBigQueryIntegrationTe
     assertThat(
         r1.getString(25) == "EyoaORzOGBxJCixDUFlyIfrZriB3FNH5oQ9nvLHIKI0="); // SHA2(word, 256)
     assertThat(r1.getString(26) == "153356");
+    assertThat(r1.getLong(27) == 1L);
   }
 
   @Test
