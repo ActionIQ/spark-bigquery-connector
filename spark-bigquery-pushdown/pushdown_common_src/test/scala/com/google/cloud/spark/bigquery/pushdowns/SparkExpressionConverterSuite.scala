@@ -509,7 +509,7 @@ class SparkExpressionConverterSuite extends AnyFunSuite with BeforeAndAfter {
     val formatNumberExpression = FormatNumber.apply(Literal(1245.3456), Literal(2))
     val bigQuerySQLStatement = expressionConverter.convertStringExpressions(formatNumberExpression, fields)
     val firstPart = "FORMAT ( '%\\'d' , CAST ( 1245.3456 AS INT64 ) )"
-    val secondPart = "SUBSTRING ( FORMAT ( '%.4f' , MOD ( CAST ( 1245.3456 AS INT64 ) , CAST ( 1 AS INT64 ) ) ) , 2 , 3 )"
+    val secondPart = "SUBSTRING ( FORMAT ( '%.4f' , CAST ( MOD ( CAST ( 1245.3456 AS INT64 ) , CAST ( 1 AS INT64 ) ) AS FLOAT64 ) ) , 2 , 3 )"
     assert(bigQuerySQLStatement.get.toString == s"CONCAT ( $firstPart , $secondPart )")
   }
 

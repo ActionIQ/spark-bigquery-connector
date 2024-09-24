@@ -571,7 +571,7 @@ abstract class SparkExpressionConverter {
           if decimalPlacesExp.foldable && isIntegralType(decimalPlacesExp.dataType) =>
         val firstPart = FormatString(Literal("%\\\'d"), Cast(numberExp, LongType))
         val secondPart = Substring(
-          FormatString(Literal("%.4f"), Remainder(numberExp, Literal(1L))),
+          FormatString(Literal("%.4f"), Cast(Remainder(numberExp, Literal(1L)), FloatType)),
           Literal(2),
           Literal(decimalPlacesExp.toString.toInt + 1)
         )
