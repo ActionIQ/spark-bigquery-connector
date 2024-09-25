@@ -1209,6 +1209,12 @@ public class QueryPushdownIntegrationTestBase extends SparkBigQueryIntegrationTe
     var df = readTestDataFromBigQuery("connector_dev", "connector_dev.dt3");
     df.createOrReplaceTempView("dt3");
 
+    /*
+    TODO: some test cases missing here
+
+    "yyyy-MM-dd aMa HH:mm:ss" ->
+     */
+
     var formatTestsWithIndex =
         zipWithIndex(
             Arrays.asList(
