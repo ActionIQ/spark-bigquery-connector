@@ -85,7 +85,7 @@
 
     <properties>
         <gpg.skip>true</gpg.skip>
-        <revision>0.30.0-aiq19</revision>
+        <revision>0.30.0-aiq24</revision>
 
         <avro.version>1.11.1</avro.version>
         <arrow.version>11.0.0</arrow.version>

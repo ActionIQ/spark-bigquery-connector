@@ -103,7 +103,17 @@ abstract class SparkExpressionConverter {
             ConstantString("COALESCE") + blockStatement( ConstantString("CAST") + blockStatement(convertStatement(right, fields) + ConstantString("AS STRING") ) + "," + ConstantString("\"\"") )
         )
 
-      case b@BinaryOperator(left, right) =>
+      // Bigquery does not support binaryOperator '%'
+      // https://cloud.google.com/bigquery/docs/reference/standard-sql/operators
+      //
+      // Also note that both types need to be compatible, else MOD will throw and wont pushdown
+      // https://cloud.google.com/bigquery/docs/reference/standard-sql/mathematical_functions#mod
+      case Remainder(a, b, _) =>
+        ConstantString("MOD") + blockStatement(
+          convertStatement(a, fields) + "," + convertStatement(b, fields)
+        )
+
+      case b @ BinaryOperator(left, right) =>
         blockStatement(
           convertStatement(left, fields) + b.symbol + convertStatement(right, fields)
         )
@@ -288,9 +298,31 @@ abstract class SparkExpressionConverter {
       case AiqDateToString(timestamp, dateFormat, timezoneId) if dateFormat.foldable =>
         val tsMillisStmt = ConstantString("TIMESTAMP_MILLIS") + blockStatement(convertStatement(timestamp, fields))
         val datetimeStmt = ConstantString("DATETIME") + blockStatement(tsMillisStmt + "," + convertStatement(timezoneId, fields))
-        val fixedFormat = isoDateFmtToBigQuery(dateFormat.toString)
+        val fixedFormat = isoDateFmtToBigQueryFormat(dateFormat.toString)
         val formatStr = s"""AS STRING FORMAT "$fixedFormat""""
         ConstantString("CAST") + blockStatement(datetimeStmt + formatStr)
+
+      /**
+       * --- spark.sql(
+       * ---   "select aiq_string_to_date('2019-09-01 14:50:52', 'yyyy-MM-dd HH:mm:ss', 'America/New_York')"
+       * --- ).as[Long].collect.head == 1567363852000L
+       *
+       * SELECT UNIX_MILLIS(
+       *   TIMESTAMP(
+       *     PARSE_DATETIME('%Y-%m-%d %H:%M:%S', '2019-09-01 14:50:52'),
+       *     'America/New_York'))
+       *
+       * -- 1567363852000
+       */
+      case AiqStringToDate(dateStr, format, timezone) if format.foldable =>
+        val newFormat = isoDateFmtToBigQueryParse(format.toString)
+        val parsedDt = ConstantString("PARSE_DATETIME") + blockStatement(
+           convertStatement(Literal(newFormat), fields) + "," + convertStatement(dateStr, fields)
+        )
+        val timestampInZone = ConstantString("TIMESTAMP") + blockStatement(
+          parsedDt + "," + convertStatement(timezone, fields)
+        )
+        ConstantString("UNIX_MILLIS") + blockStatement(timestampInZone)
 
       case _ => null
     })
@@ -301,34 +333,82 @@ abstract class SparkExpressionConverter {
    *
    * https://en.wikipedia.org/wiki/ISO_8601#Times
    *
-   * To Bigquery date format:
+   * To Bigquery parse language:
+   *
+   * https://cloud.google.com/bigquery/docs/reference/standard-sql/format-elements#format_elements_date_time
+   */
+  private def isoDateFmtToBigQueryParse(format: String): String = {
+    // be careful with the order here, you dont want MMM -> Month -> MMonth
+    format
+      // Full year
+      .replaceAll("[yY]{4,8}", "%Y")
+      // Two-digit year
+      .replaceAll("[yY]{2}", "%y")
+      // Full month name
+      .replaceAll("M{4,8}", "%B")
+      // Abbreviated month name
+      .replaceAll("M{3}", "%b")
+      // Two-digit month
+      .replaceAll("M{1,2}", "%m")
+      // Two digits for hour (00 through 23)
+      .replaceAll("HH", "%H")
+      // Two digits for hour (01 through 12)
+      .replaceAll("hh", "%I")
+      // Two digits for minute
+      .replaceAll("mm", "%M")
+      // Two digits for second
+      .replaceAll("ss", "%S")
+      // Ante meridiem (am) / post meridiem (pm)
+      .replaceAll("p", "%p")
+      .replaceAll("a", "%p")
+      // Full day of week
+      .replaceAll("E{4,8}", "%A")
+      // Abbreviated day of week
+      .replaceAll("E{1,3}", "%a")
+      // Two digits for day
+      .replaceAll("[dD]{2}", "%d")
+  }
+
+  /**
+   * Function to convert a ISO date format:
+   *
+   * https://en.wikipedia.org/wiki/ISO_8601#Times
+   *
+   * To Bigquery format language:
    *
    * https://cloud.google.com/bigquery/docs/reference/standard-sql/format-elements#format_date_time_as_string
    */
-  private def isoDateFmtToBigQuery(format: String): String = {
+  private def isoDateFmtToBigQueryFormat(format: String): String = {
     // be careful with the order here, you dont want MMM -> Month -> MMonth
     format
-      // Two-digit month => M -> MM
-      .replaceAll("(?<=[^M])M(?=[^M])", "MM")
-      // Full month name => MMMM... -> Month
-      .replaceAll("(?<=[^M])M{4,8}(?=[^M])", "Month")
-      // Abbreviated month name => MMM -> MON
-      .replaceAll("(?<=[^M])M{3}(?=[^M])", "Mon")
+      // Full year
+      .replaceAll("[yY]{4,8}", "YYYY")
+      // Two-digit year
+      .replaceAll("[yY]{2}", "YY")
+      // Full month name
+      .replaceAll("M{4,8}", "Month")
+      // Abbreviated month name
+      .replaceAll("M{3}", "Mon")
+      // Two-digit month
+      .replaceAll("(?<=[^M])MM(?=[^M])", "MM")
+      .replaceAll("(?<=[^M])M(?=[^Mo])", "MM")
       // Two digits for hour (00 through 23)
       .replaceAll("HH", "HH24")
       // Two digits for hour (01 through 12)
       .replaceAll("hh", "HH12")
-      // Two digits for minute (00 through 59)
+      // Two digits for minute
       .replaceAll("mm", "MI")
-      // Two digits for second (00 through 59)
+      // Two digits for second
       .replaceAll("ss", "SS")
       // Ante meridiem (am) / post meridiem (pm)
+      .replaceAll("p", "AM")
       .replaceAll("a", "AM")
-      .replaceAll("p", "PM")
-      // Full day of week => EEEE... -> Day
-      .replaceAll("(?<=[^E])E{4,8}(?=[^E])", "Day")
-      // Abbreviated day of week => E/EE/EEE -> Dy
-      .replaceAll("(?<=[^E])E{1,3}(?=[^E])", "Dy")
+      // Two digits for day
+      .replaceAll("[dD]{2}", "DD")
+      // Full day of week
+      .replaceAll("E{4,8}", "Day")
+      // Abbreviated day of week
+      .replaceAll("E{1,3}", "Dy")
   }
 
   def convertMathematicalExpressions(expression: Expression, fields: Seq[Attribute]): Option[BigQuerySQLStatement] = {
@@ -338,11 +418,6 @@ abstract class SparkExpressionConverter {
            _: Least | _:Log10 | _: Pow | _:Round | _: Sin | _: Sinh |
            _: Sqrt | _: Tan | _: Tanh =>
         ConstantString(expression.prettyName.toUpperCase) + blockStatement(convertStatements(fields, expression.children: _*))
-
-      case Remainder(a, b, _) =>
-        ConstantString("MOD") + blockStatement(
-          convertStatement(a, fields) + "," + convertStatement(b, fields)
-        )
 
       /**
        * Only supporting 16 -> 10 for now
@@ -470,6 +545,8 @@ abstract class SparkExpressionConverter {
     })
   }
 
+  private def isIntegralType(dt: DataType): Boolean = dt.isInstanceOf[LongType] || dt.isInstanceOf[IntegerType]
+
   def convertStringExpressions(expression: Expression, fields: Seq[Attribute]): Option[BigQuerySQLStatement] = {
     Option(expression match {
       case _: Ascii | _: Concat | _: Length | _: Lower |
@@ -497,20 +574,23 @@ abstract class SparkExpressionConverter {
        * -- 4,567
        *
        * select CONCAT(
-       *     FORMAT("%'d", CAST(CAST('12332.123456' AS NUMERIC) AS INT64)),
+       *     FORMAT("%'d", CAST('12332.123456' AS INT64)),
        *     SUBSTRING(FORMAT("%.4f", MOD(CAST('12332.123456' AS NUMERIC), 1)), 2, 5)
        * )
        */
       case FormatNumber(numberExp, decimalPlacesExp)
-          if decimalPlacesExp.foldable && decimalPlacesExp.dataType == IntegerType && decimalPlacesExp.toString == "0" =>
-        val firstPart = FormatString(Literal("%'d"), Cast(Cast(numberExp, FloatType), LongType))
+          if decimalPlacesExp.foldable && isIntegralType(decimalPlacesExp.dataType) && decimalPlacesExp.toString == "0" =>
+        val firstPart = FormatString(Literal("%\\\'d"), Cast(numberExp, LongType))
         convertStatement(firstPart, fields)
 
       case FormatNumber(numberExp, decimalPlacesExp)
-          if decimalPlacesExp.foldable && decimalPlacesExp.dataType == IntegerType =>
-        val firstPart = FormatString(Literal("%\'d"), Cast(Cast(numberExp, FloatType), LongType))
+          if decimalPlacesExp.foldable && isIntegralType(decimalPlacesExp.dataType) =>
+        val firstPart = FormatString(Literal("%\\\'d"), Cast(numberExp, LongType))
         val secondPart = Substring(
-          FormatString(Literal("%.4f"), Remainder(Cast(numberExp, FloatType), Literal(1))),
+          FormatString(
+            Literal("%.4f"),
+            Subtract(numberExp, Floor(numberExp))
+          ),
           Literal(2),
           Literal(decimalPlacesExp.toString.toInt + 1)
         )

@@ -122,8 +122,8 @@ public class QueryPushdownIntegrationTestBase extends SparkBigQueryIntegrationTe
     assertThat(r1.get(20)).isEqualTo(true); // LIKE(word, '%aug%urs%')
     assertThat(r1.get(21)).isEqualTo(true); // LIKE(word, 'a_g_rs')
     assertThat(r1.get(22)).isEqualTo(false); // LIKE(word, 'b_g_rs')
-    assertThat(r1.getString(23) == "1,666.833");
-    assertThat(r1.getString(24) == "10,001");
+    assertThat(r1.getString(23).equals("1,666.833"));
+    assertThat(r1.getString(24).equals("10,001"));
   }
 
   @Test
@@ -235,7 +235,8 @@ public class QueryPushdownIntegrationTestBase extends SparkBigQueryIntegrationTe
                 "MD5(word)",
                 "SHA1(word)",
                 "SHA2(word, 256)",
-                "CONV(SUBSTRING(CAST(MD5(word) AS STRING), 0, 5), 16, 10)")
+                "CONV(SUBSTRING(CAST(MD5(word) AS STRING), 0, 5), 16, 10)",
+                "word_count % 3")
             .where("word_count = 10 and word = 'glass'");
     List<Row> result = df.collectAsList();
     Row r1 = result.get(0);
@@ -266,6 +267,7 @@ public class QueryPushdownIntegrationTestBase extends SparkBigQueryIntegrationTe
     assertThat(
         r1.getString(25) == "EyoaORzOGBxJCixDUFlyIfrZriB3FNH5oQ9nvLHIKI0="); // SHA2(word, 256)
     assertThat(r1.getString(26) == "153356");
+    assertThat(r1.getLong(27) == 1L);
   }
 
   @Test
@@ -1167,6 +1169,32 @@ public class QueryPushdownIntegrationTestBase extends SparkBigQueryIntegrationTe
             .sql("select aiq_day_diff(ts1, unix_timestamp() * 1000, 'UTC') from dt")
             .collectAsList();
     assert ((int) diff2.get(0).get(0) > 10); // 2023-09-01 to current
+  }
+
+  /**
+   * Reading from a BigQuery table created with:
+   *
+   * <p>create or replace table aiq-dev.connector_dev.dt5 (date_str string, format string, tz
+   * string)
+   *
+   * <p>insert into aiq-dev.connector_dev.dt5 values ('2019-09-01 14:50', 'yyyy-MM-dd HH:mm',
+   * 'America/New_York'), ('2019-09-01 02:50 PM', 'yyyy-MM-dd hh:mm a', 'America/New_York'),
+   * ('2019-09-01 PM 02:50', 'yyyy-MM-dd a hh:mm', 'America/New_York')
+   */
+  @Test
+  public void testAiqStringToDate() {
+    Dataset<Row> df = readTestDataFromBigQuery("connector_dev", "connector_dev.dt5");
+    df.createOrReplaceTempView("dt5");
+
+    List<Long> results =
+        spark
+            .sql(
+                "select aiq_string_to_date(date_str, format, tz), date_str from dt5 order by date_str")
+            .collectAsList().stream()
+            .map(r -> r.getLong(0))
+            .collect(Collectors.toList());
+
+    assert (results.equals(Arrays.asList(1567363800000L, 1567363800000L, 1567363800000L)));
   }
 
   /**
