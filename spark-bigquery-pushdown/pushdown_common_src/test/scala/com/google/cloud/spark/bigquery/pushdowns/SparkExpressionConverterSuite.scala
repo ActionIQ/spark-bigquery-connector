@@ -137,7 +137,7 @@ class SparkExpressionConverterSuite extends AnyFunSuite with BeforeAndAfter {
     val binaryOperatorExpression = Remainder(schoolIdAttributeReference, Literal.apply(75L, LongType))
     val bigQuerySQLStatement = expressionConverter.convertBasicExpressions(binaryOperatorExpression, fields)
     assert(bigQuerySQLStatement.isDefined)
-    assert(bigQuerySQLStatement.get.toString == "MOD ( CAST ( SUBQUERY_2.SCHOOLID AS INT64 ) , CAST ( 75 AS INT64 ) )")
+    assert(bigQuerySQLStatement.get.toString == "MOD ( SUBQUERY_2.SCHOOLID , 75 )")
   }
 
   test("convertBasicExpressions with BinaryOperator (GreaterThanOrEqual)") {
@@ -509,7 +509,7 @@ class SparkExpressionConverterSuite extends AnyFunSuite with BeforeAndAfter {
     val formatNumberExpression = FormatNumber.apply(Literal(1245.3456), Literal(2))
     val bigQuerySQLStatement = expressionConverter.convertStringExpressions(formatNumberExpression, fields)
     val firstPart = "FORMAT ( '%\\'d' , CAST ( 1245.3456 AS INT64 ) )"
-    val secondPart = "SUBSTRING ( FORMAT ( '%.4f' , CAST ( MOD ( CAST ( 1245.3456 AS INT64 ) , CAST ( 1 AS INT64 ) ) AS FLOAT64 ) ) , 2 , 3 )"
+    val secondPart = "SUBSTRING ( FORMAT ( '%.4f' , ( 1245.3456 - FLOOR ( 1245.3456 ) ) ) , 2 , 3 )"
     assert(bigQuerySQLStatement.get.toString == s"CONCAT ( $firstPart , $secondPart )")
   }
 

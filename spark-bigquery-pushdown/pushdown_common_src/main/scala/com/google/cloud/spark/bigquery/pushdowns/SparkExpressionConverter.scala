@@ -103,11 +103,14 @@ abstract class SparkExpressionConverter {
             ConstantString("COALESCE") + blockStatement( ConstantString("CAST") + blockStatement(convertStatement(right, fields) + ConstantString("AS STRING") ) + "," + ConstantString("\"\"") )
         )
 
-      // Bigquery does not support '%'
+      // Bigquery does not support binaryOperator '%'
       // https://cloud.google.com/bigquery/docs/reference/standard-sql/operators
+      //
+      // Also note that both types need to be compatible, else MOD will throw and wont pushdown
+      // https://cloud.google.com/bigquery/docs/reference/standard-sql/mathematical_functions#mod
       case Remainder(a, b, _) =>
         ConstantString("MOD") + blockStatement(
-          convertStatement(Cast(a, LongType), fields) + "," + convertStatement(Cast(b, LongType), fields)
+          convertStatement(a, fields) + "," + convertStatement(b, fields)
         )
 
       case b @ BinaryOperator(left, right) =>
@@ -584,7 +587,10 @@ abstract class SparkExpressionConverter {
           if decimalPlacesExp.foldable && isIntegralType(decimalPlacesExp.dataType) =>
         val firstPart = FormatString(Literal("%\\\'d"), Cast(numberExp, LongType))
         val secondPart = Substring(
-          FormatString(Literal("%.4f"), Cast(Remainder(numberExp, Literal(1L)), FloatType)),
+          FormatString(
+            Literal("%.4f"),
+            Subtract(numberExp, Floor(numberExp))
+          ),
           Literal(2),
           Literal(decimalPlacesExp.toString.toInt + 1)
         )
