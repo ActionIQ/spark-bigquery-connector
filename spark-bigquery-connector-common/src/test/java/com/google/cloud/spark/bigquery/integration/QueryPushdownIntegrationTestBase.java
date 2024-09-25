@@ -48,7 +48,7 @@ public class QueryPushdownIntegrationTestBase extends SparkBigQueryIntegrationTe
         .collect(Collectors.toList());
   }
 
-  @Ignore
+  @Test
   public void testApproxCountDistinct() {
     Dataset<Row> df = readTestDataFromBigQuery("connector_dev", "connector_dev.dt");
     df.createOrReplaceTempView("dt");
@@ -60,7 +60,7 @@ public class QueryPushdownIntegrationTestBase extends SparkBigQueryIntegrationTe
     assert (results.get(0).getLong(1) == 1);
   }
 
-  @Ignore
+  @Test
   public void testStringFunctionExpressions() {
     Dataset<Row> df =
         spark
@@ -93,7 +93,7 @@ public class QueryPushdownIntegrationTestBase extends SparkBigQueryIntegrationTe
                 "LIKE(word, '%aug%urs%') as like_with_percent",
                 "LIKE(word, 'a_g_rs') as like_with_underscore",
                 "LIKE(word, 'b_g_rs') as like_with_underscore_return_false",
-                "FORMAT_NUMBER(CAST((LENGTH(word) + 10000) AS FLOAT)/6, 3)",
+                "FORMAT_NUMBER(CAST((word_count + 10000) AS FLOAT)/6, 3)",
                 "FORMAT_NUMBER(word_count + 10000, 0)")
             .where("word = 'augurs'");
     List<Row> result = df.collectAsList();
@@ -126,7 +126,7 @@ public class QueryPushdownIntegrationTestBase extends SparkBigQueryIntegrationTe
     assertThat(r1.getString(24).equals("10,001"));
   }
 
-  @Ignore
+  @Test
   public void testDateFunctionExpressions() {
     // This table only has one row and one column which is today's date
     Dataset<Row> df =
@@ -166,7 +166,7 @@ public class QueryPushdownIntegrationTestBase extends SparkBigQueryIntegrationTe
     assertThat(r1.get(6).toString()).isEqualTo(date.with(firstDayOfYear()).toString()); // TRUNC
   }
 
-  @Ignore
+  @Test
   public void testBasicExpressions() {
     Dataset<Row> df =
         spark
@@ -199,7 +199,7 @@ public class QueryPushdownIntegrationTestBase extends SparkBigQueryIntegrationTe
     assertThat(r1.get(4)).isEqualTo(false); // 'augurs' <=> 'sonnets'
   }
 
-  @Ignore
+  @Test
   public void testMathematicalFunctionExpressions() {
     Dataset<Row> df =
         spark
@@ -270,7 +270,7 @@ public class QueryPushdownIntegrationTestBase extends SparkBigQueryIntegrationTe
     assertThat(r1.getLong(27) == 1L);
   }
 
-  @Ignore
+  @Test
   public void testMiscellaneousExpressions() {
     Dataset<Row> df =
         spark
@@ -312,7 +312,7 @@ public class QueryPushdownIntegrationTestBase extends SparkBigQueryIntegrationTe
     assertThat(r1.get(11)).isEqualTo(false); // CHECKOVERFLOW
   }
 
-  @Ignore
+  @Test
   public void testUnionQuery() {
     Dataset<Row> df =
         spark
@@ -341,7 +341,7 @@ public class QueryPushdownIntegrationTestBase extends SparkBigQueryIntegrationTe
     assertThat(unionByNameList.get(0).get(1)).isAnyOf(100L, 150L);
   }
 
-  @Ignore
+  @Test
   public void testBooleanExpressions() {
     Dataset<Row> df =
         spark
@@ -452,7 +452,7 @@ public class QueryPushdownIntegrationTestBase extends SparkBigQueryIntegrationTe
     assertThat(row.get(10)).isEqualTo(3677); // COUNT(word) OVER count_window
   }
 
-  @Ignore
+  @Test
   public void testWindowQueryWithWindowSpec() {
     writeTestDataToBigQuery(
         getNumStructDataFrame(TestConstants.numStructDataset),
@@ -504,7 +504,7 @@ public class QueryPushdownIntegrationTestBase extends SparkBigQueryIntegrationTe
     assertThat(r.get(2)).isEqualTo(4);
   }
 
-  @Ignore
+  @Test
   public void testAggregateExpressions() {
     writeTestDataToBigQuery(
         getNumStructDataFrame(TestConstants.numStructDataset),
@@ -547,7 +547,7 @@ public class QueryPushdownIntegrationTestBase extends SparkBigQueryIntegrationTe
     assertThat(r1.get(11)).isEqualTo(0.5); // VAR_SAMP(num1)
   }
 
-  @Ignore
+  @Test
   public void testInnerJoin() {
     writeTestDataToBigQuery(
         getNumStructDataFrame(TestConstants.numStructDataset),
@@ -610,7 +610,7 @@ public class QueryPushdownIntegrationTestBase extends SparkBigQueryIntegrationTe
     }
   }
 
-  @Ignore
+  @Test
   public void testLeftOuterJoin() {
     writeTestDataToBigQuery(
         getNumStructDataFrame(TestConstants.numStructDataset),
@@ -711,7 +711,7 @@ public class QueryPushdownIntegrationTestBase extends SparkBigQueryIntegrationTe
     }
   }
 
-  @Ignore
+  @Test
   public void testRightOuterJoin() {
     writeTestDataToBigQuery(
         getNumStructDataFrame(TestConstants.numStructDataset),
@@ -814,7 +814,7 @@ public class QueryPushdownIntegrationTestBase extends SparkBigQueryIntegrationTe
     }
   }
 
-  @Ignore
+  @Test
   public void testFullOuterJoin() {
     writeTestDataToBigQuery(
         getNumStructDataFrame(TestConstants.numStructDataset),
@@ -919,7 +919,7 @@ public class QueryPushdownIntegrationTestBase extends SparkBigQueryIntegrationTe
     }
   }
 
-  @Ignore
+  @Test
   public void testCrossJoin() {
     writeTestDataToBigQuery(
         getNumStructDataFrame(TestConstants.numStructDataset),
@@ -962,7 +962,7 @@ public class QueryPushdownIntegrationTestBase extends SparkBigQueryIntegrationTe
     assertThat(df_to_join.crossJoin(df).collectAsList().size()).isEqualTo(6);
   }
 
-  @Ignore
+  @Test
   public void testLeftSemiJoin() {
     writeTestDataToBigQuery(
         getNumStructDataFrame(TestConstants.numStructDataset),
@@ -1025,7 +1025,7 @@ public class QueryPushdownIntegrationTestBase extends SparkBigQueryIntegrationTe
     }
   }
 
-  @Ignore
+  @Test
   public void testLeftAntiJoin() {
     writeTestDataToBigQuery(
         getNumStructDataFrame(TestConstants.numStructDataset),
@@ -1081,7 +1081,7 @@ public class QueryPushdownIntegrationTestBase extends SparkBigQueryIntegrationTe
     assertThat(result.get(0).get(0)).isEqualTo(6);
   }
 
-  @Ignore
+  @Test
   public void testJoinQuery() {
     writeTestDataToBigQuery(
         getNumStructDataFrame(TestConstants.numStructDataset),
@@ -1154,7 +1154,7 @@ public class QueryPushdownIntegrationTestBase extends SparkBigQueryIntegrationTe
    * unix_millis(timestamp("2023-09-01T23:59:59")),
    * unix_millis(timestamp("2023-09-02T00:00:00")),"Asia/Shanghai");
    */
-  @Ignore
+  @Test
   public void testAiqDayDiff() {
     Dataset<Row> df = readTestDataFromBigQuery("connector_dev", "connector_dev.dt");
     df.createOrReplaceTempView("dt");
@@ -1181,7 +1181,7 @@ public class QueryPushdownIntegrationTestBase extends SparkBigQueryIntegrationTe
    * 'America/New_York'), ('2019-09-01 02:50 PM', 'yyyy-MM-dd hh:mm a', 'America/New_York'),
    * ('2019-09-01 PM 02:50', 'yyyy-MM-dd a hh:mm', 'America/New_York')
    */
-  @Ignore
+  @Test
   public void testAiqStringToDate() {
     Dataset<Row> df = readTestDataFromBigQuery("connector_dev", "connector_dev.dt5");
     df.createOrReplaceTempView("dt5");
@@ -1208,12 +1208,6 @@ public class QueryPushdownIntegrationTestBase extends SparkBigQueryIntegrationTe
   public void testAiqDateToStringPart1() {
     var df = readTestDataFromBigQuery("connector_dev", "connector_dev.dt3");
     df.createOrReplaceTempView("dt3");
-
-    /*
-    TODO: some test cases missing here
-
-    "yyyy-MM-dd aMa HH:mm:ss" ->
-     */
 
     var formatTestsWithIndex =
         zipWithIndex(
@@ -1257,8 +1251,6 @@ public class QueryPushdownIntegrationTestBase extends SparkBigQueryIntegrationTe
             .map(r -> r.getString(1))
             .collect(Collectors.toList());
 
-    System.out.println("AIQDATETOSTRING " + results);
-
     assert (results.equals(
         Arrays.asList(
             "09",
@@ -1300,7 +1292,7 @@ public class QueryPushdownIntegrationTestBase extends SparkBigQueryIntegrationTe
    * 'America/New_York'), (7, 1567363852000, 'yyyy-MM-dd hh:mm:ss', 'America/New_York'), (8,
    * 1567363852000, 'yyyy-MM-dd hh:mm:mm:ss', 'America/New_York')
    */
-  @Ignore
+  @Test
   public void testAiqDateToStringPart2() {
     Dataset<Row> df = readTestDataFromBigQuery("connector_dev", "connector_dev.dt2");
     df.createOrReplaceTempView("dt2");
@@ -1333,7 +1325,7 @@ public class QueryPushdownIntegrationTestBase extends SparkBigQueryIntegrationTe
    * <p>insert into aiq-dev.connector_dev.dt4 values(1460080000000, 'America/New_York', 2) insert
    * into aiq-dev.connector_dev.dt4 values(1460080000000, 'Asia/Tokyo', -1)
    */
-  @Ignore
+  @Test
   public void testAiqDayStart() {
     Dataset<Row> df = readTestDataFromBigQuery("connector_dev", "connector_dev.dt4");
     df.createOrReplaceTempView("dt4");
@@ -1348,7 +1340,7 @@ public class QueryPushdownIntegrationTestBase extends SparkBigQueryIntegrationTe
   }
 
   /** Test for AIQ EXE-2026 */
-  @Ignore
+  @Test
   public void testSourceQuery() {
     spark
         .sqlContext()
