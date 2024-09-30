@@ -72,7 +72,8 @@ public class BigQueryDataSourceWriterModule implements Module {
         com.google.common.base.Optional.fromJavaUtil(tableConfig.getTraceId()),
         tableConfig.getEnableModeCheckForSchemaFields(),
         tableConfig.getBigQueryTableLabels(),
-        SchemaConvertersConfiguration.from(tableConfig)); // needs to be serializable
+        SchemaConvertersConfiguration.from(tableConfig), // needs to be serializable
+        tableConfig.getTableExpirationMs());
   }
 
   @Singleton

@@ -36,6 +36,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import java.util.Arrays;
+import java.util.OptionalLong;
 import org.apache.spark.sql.SaveMode;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.types.StructType;
@@ -83,7 +84,8 @@ public class BigQueryDirectDataSourceWriterContext implements DataSourceWriterCo
       Optional<String> traceId,
       boolean enableModeCheckForSchemaFields,
       ImmutableMap<String, String> tableLabels,
-      SchemaConvertersConfiguration schemaConvertersConfiguration)
+      SchemaConvertersConfiguration schemaConvertersConfiguration,
+      OptionalLong tableExpirationMs)
       throws IllegalArgumentException {
     this.bigQueryClient = bigQueryClient;
     this.writeClientFactory = bigQueryWriteClientFactory;
@@ -104,7 +106,8 @@ public class BigQueryDirectDataSourceWriterContext implements DataSourceWriterCo
           "Could not convert Spark schema to protobuf descriptor", e);
     }
 
-    this.tableToWrite = getOrCreateTable(saveMode, destinationTableId, bigQuerySchema);
+    this.tableToWrite =
+        getOrCreateTable(saveMode, destinationTableId, bigQuerySchema, tableExpirationMs);
     this.tablePathForBigQueryStorage =
         bigQueryClient.createTablePathForBigQueryStorage(tableToWrite.getTableId());
 
@@ -124,7 +127,10 @@ public class BigQueryDirectDataSourceWriterContext implements DataSourceWriterCo
    *     or the temporaryTableId.
    */
   private BigQueryTable getOrCreateTable(
-      SaveMode saveMode, TableId destinationTableId, Schema bigQuerySchema)
+      SaveMode saveMode,
+      TableId destinationTableId,
+      Schema bigQuerySchema,
+      OptionalLong tableExpirationMs)
       throws IllegalArgumentException {
     if (bigQueryClient.tableExists(destinationTableId)) {
       TableInfo destinationTable = bigQueryClient.getTable(destinationTableId);
@@ -154,7 +160,10 @@ public class BigQueryDirectDataSourceWriterContext implements DataSourceWriterCo
       return new BigQueryTable(destinationTable.getTableId(), false);
     } else {
       return new BigQueryTable(
-          bigQueryClient.createTable(destinationTableId, bigQuerySchema).getTableId(), true);
+          bigQueryClient
+              .createTable(destinationTableId, bigQuerySchema, tableExpirationMs)
+              .getTableId(),
+          true);
     }
   }
 

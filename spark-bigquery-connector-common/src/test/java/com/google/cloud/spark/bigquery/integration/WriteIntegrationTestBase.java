@@ -203,6 +203,29 @@ abstract class WriteIntegrationTestBase extends SparkBigQueryIntegrationTestBase
   }
 
   @Test
+  public void testWriteToBigQuery_WithExpiration() throws InterruptedException {
+    Dataset<Row> df = initialData();
+    var testTableName = fullTableName();
+
+    df.write()
+        .format("bigquery")
+        .mode(SaveMode.ErrorIfExists)
+        .option("table", testTableName)
+        .option("tableExpirationMs", "30000")
+        .option("temporaryGcsBucket", TestConstants.TEMPORARY_GCS_BUCKET)
+        .option("writeMethod", writeMethod.toString())
+        .save();
+
+    assertThat(spark.read().format("bigquery").option("table", testTableName).load().count() == 2);
+
+    Thread.sleep(40000);
+
+    assertThrows(
+        Exception.class,
+        () -> spark.read().format("bigquery").option("table", testTableName).load().count());
+  }
+
+  @Test
   public void testWriteToBigQuery_EnableListInference() throws InterruptedException {
     Dataset<Row> df = initialData();
     df.write()

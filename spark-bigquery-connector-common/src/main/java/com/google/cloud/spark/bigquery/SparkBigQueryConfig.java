@@ -162,6 +162,7 @@ public class SparkBigQueryConfig
   com.google.common.base.Optional<String> materializationDataset = empty();
   com.google.common.base.Optional<String> partitionField = empty();
   Long partitionExpirationMs = null;
+  Long tableExpirationMs = null;
   com.google.common.base.Optional<Boolean> partitionRequireFilter = empty();
   com.google.common.base.Optional<TimePartitioning.Type> partitionType = empty();
   com.google.common.base.Optional<String[]> clusteredFields = empty();
@@ -395,6 +396,8 @@ public class SparkBigQueryConfig
     config.partitionField = getOption(options, "partitionField");
     config.partitionExpirationMs =
         getOption(options, "partitionExpirationMs").transform(Long::valueOf).orNull();
+    config.tableExpirationMs =
+        getOption(options, "tableExpirationMs").transform(Long::valueOf).orNull();
     config.partitionRequireFilter =
         getOption(options, "partitionRequireFilter").transform(Boolean::valueOf);
     config.clusteredFields = getOption(options, "clusteredFields").transform(s -> s.split(","));
@@ -738,6 +741,10 @@ public class SparkBigQueryConfig
     return partitionExpirationMs == null
         ? OptionalLong.empty()
         : OptionalLong.of(partitionExpirationMs);
+  }
+
+  public OptionalLong getTableExpirationMs() {
+    return tableExpirationMs == null ? OptionalLong.empty() : OptionalLong.of(tableExpirationMs);
   }
 
   public Optional<Boolean> getPartitionRequireFilter() {

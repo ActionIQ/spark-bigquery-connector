@@ -140,9 +140,14 @@ public class BigQueryClient {
    * @param schema The Schema of the table to be created.
    * @return The {@code Table} object representing the table that was created.
    */
-  public TableInfo createTable(TableId tableId, Schema schema) {
-    TableInfo tableInfo = TableInfo.newBuilder(tableId, StandardTableDefinition.of(schema)).build();
-    return bigQuery.create(tableInfo);
+  public TableInfo createTable(TableId tableId, Schema schema, OptionalLong expirationMs) {
+    var baseBuilder = TableInfo.newBuilder(tableId, StandardTableDefinition.of(schema));
+    if (expirationMs.isPresent()) {
+      var expirationTime = System.currentTimeMillis() + expirationMs.getAsLong();
+      return bigQuery.create(baseBuilder.setExpirationTime(expirationTime).build());
+    } else {
+      return bigQuery.create(baseBuilder.build());
+    }
   }
 
   /**
@@ -617,9 +622,12 @@ public class BigQueryClient {
   }
 
   /** Creates the table with the given schema, only if it does not exist yet. */
-  public void createTableIfNeeded(TableId tableId, Schema bigQuerySchema) {
+  public void createTableIfNeeded(
+      TableId tableId, Schema bigQuerySchema, OptionalLong expirationMs) {
     if (!tableExists(tableId)) {
-      createTable(tableId, bigQuerySchema);
+      createTable(tableId, bigQuerySchema, expirationMs);
+    } else if (expirationMs.isPresent()) {
+      log.warn(String.format("Table %s already exists, not applying expiration status", tableId));
     }
   }
 
