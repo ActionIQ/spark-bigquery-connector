@@ -626,8 +626,8 @@ public class BigQueryClient {
       TableId tableId, Schema bigQuerySchema, OptionalLong expirationMs) {
     if (!tableExists(tableId)) {
       createTable(tableId, bigQuerySchema, expirationMs);
-    } else {
-      // TODO: set the correct expiration on the table
+    } else if (expirationMs.isPresent()) {
+      log.warn(String.format("Table %s already exists, not applying expiration status", tableId));
     }
   }
 

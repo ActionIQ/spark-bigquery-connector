@@ -624,8 +624,8 @@ The API Supports a number of options to configure the read
    <tr valign="top">
     <td><code>tableExpirationMs</code>
      </td>
-     <td>Number of milliseconds to expire the entire table
-        <br/>(Optional. Defaults to not expire).
+     <td>Number of milliseconds to expire the entire table. Will only apply on initial table creation
+        <br/>(Optional. Default to never expire).
      </td>
      <td>Write</td>
    </tr>
