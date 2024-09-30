@@ -622,6 +622,14 @@ The API Supports a number of options to configure the read
      <td>Write</td>
    </tr>
    <tr valign="top">
+    <td><code>tableExpirationMs</code>
+     </td>
+     <td>Number of milliseconds to expire the entire table
+        <br/>(Optional. Defaults to not expire).
+     </td>
+     <td>Write</td>
+   </tr>
+   <tr valign="top">
        <td><code>partitionType</code>
         </td>
         <td>Supported types are: <code>HOUR, DAY, MONTH, YEAR</code>
