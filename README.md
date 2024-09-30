@@ -1294,7 +1294,7 @@ Download / create a JSON file containing real GCP credentials
 ```
 export GOOGLE_APPLICATION_CREDENTIALS=<path to json file>
 export GOOGLE_CLOUD_PROJECT=aiq-dev
-export TEMPORARY_GCS_BUCKET=foo  # not used unless running indirect tests
+export TEMPORARY_GCS_BUCKET=foo  # needed for tests
 ```
 
 # Version
