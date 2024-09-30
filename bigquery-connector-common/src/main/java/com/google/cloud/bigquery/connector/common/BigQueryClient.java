@@ -143,9 +143,8 @@ public class BigQueryClient {
   public TableInfo createTable(TableId tableId, Schema schema, OptionalLong expirationMs) {
     var baseBuilder = TableInfo.newBuilder(tableId, StandardTableDefinition.of(schema));
     if (expirationMs.isPresent()) {
-      return bigQuery.create(
-              baseBuilder.setExpirationTime(expirationMs.getAsLong()
-      ).build());
+      var expirationTime = System.currentTimeMillis() + expirationMs.getAsLong();
+      return bigQuery.create(baseBuilder.setExpirationTime(expirationTime).build());
     } else {
       return bigQuery.create(baseBuilder.build());
     }
@@ -623,7 +622,8 @@ public class BigQueryClient {
   }
 
   /** Creates the table with the given schema, only if it does not exist yet. */
-  public void createTableIfNeeded(TableId tableId, Schema bigQuerySchema, OptionalLong expirationMs) {
+  public void createTableIfNeeded(
+      TableId tableId, Schema bigQuerySchema, OptionalLong expirationMs) {
     if (!tableExists(tableId)) {
       createTable(tableId, bigQuerySchema, expirationMs);
     } else {

@@ -72,7 +72,8 @@ public class BigQueryDataSourceWriterInsertableRelation extends BigQueryInsertab
         Schema bigQuerySchema =
             SchemaConverters.from(SchemaConvertersConfiguration.from(config))
                 .toBigQuerySchema(data.schema());
-        bigQueryClient.createTableIfNeeded(getTableId(), bigQuerySchema, config.getTableExpirationMs());
+        bigQueryClient.createTableIfNeeded(
+            getTableId(), bigQuerySchema, config.getTableExpirationMs());
       } else {
         // Write the data into separate WriteStream (one oer partition, return the
         // WriterCommitMessageContext containing the stream name.

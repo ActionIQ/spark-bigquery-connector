@@ -31,6 +31,7 @@ import com.google.cloud.spark.bigquery.SchemaConvertersConfiguration;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import java.time.ZoneId;
+import java.util.OptionalLong;
 import org.apache.spark.sql.SaveMode;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.Metadata;
@@ -130,7 +131,7 @@ public class BigQueryDirectDataSourceWriterContextTest {
   @Test
   public void testDeleteOnAbort_newTable() {
     when(bigQueryClient.tableExists(destinationTableId)).thenReturn(false);
-    when(bigQueryClient.createTable(any(), any())).thenReturn(destinationTable);
+    when(bigQueryClient.createTable(any(), any(), any())).thenReturn(destinationTable);
     when(bigQueryClient.createTablePathForBigQueryStorage(any())).thenReturn("");
     BigQueryDirectDataSourceWriterContext ctx =
         createBigQueryDirectDataSourceWriterContext(SaveMode.Append);
@@ -151,6 +152,7 @@ public class BigQueryDirectDataSourceWriterContextTest {
         Optional.absent(),
         true,
         ImmutableMap.<String, String>builder().build(),
-        SchemaConvertersConfiguration.of(ZoneId.of("UTC")));
+        SchemaConvertersConfiguration.of(ZoneId.of("UTC")),
+        OptionalLong.empty());
   }
 }

@@ -1294,6 +1294,7 @@ Download / create a JSON file containing real GCP credentials
 ```
 export GOOGLE_APPLICATION_CREDENTIALS=<path to json file>
 export GOOGLE_CLOUD_PROJECT=aiq-dev
+export TEMPORARY_GCS_BUCKET=foo  # not used unless running indirect tests
 ```
 
 # Version
@@ -1317,12 +1318,10 @@ Run all tests except acceptance test and integration tests
 # make sure to do this after updating tests - for some reason failsafe:integration-test doesn't compile tests before running
 ./mvnw install -Pintegration -DskipTests
 
-# Test pushdown statements
 ./mvnw failsafe:integration-test -fn \
   -Dfailsafe.failIfNoSpecifiedTests=false \
   -Dit.test=com.google.cloud.spark.bigquery.integration.Spark33QueryPushdownIntegrationTest
 
-# Test read
 ./mvnw failsafe:integration-test -fn \
   -Dfailsafe.failIfNoSpecifiedTests=false \
   -Dit.test=com.google.cloud.spark.bigquery.integration.Spark33ReadFromQueryIntegrationTest
@@ -1330,6 +1329,10 @@ Run all tests except acceptance test and integration tests
 ./mvnw failsafe:integration-test -fn \
   -Dfailsafe.failIfNoSpecifiedTests=false \
   -Dit.test=com.google.cloud.spark.bigquery.integration.Spark33ReadIntegrationTest
+
+./mvnw failsafe:integration-test -fn \
+  -Dfailsafe.failIfNoSpecifiedTests=false \
+  -Dit.test=com.google.cloud.spark.bigquery.integration.Spark33DirectWriteIntegrationTest
 ```
 
 If tests failed, there might be some residual testing datasets named with `spark_bigquery_<ts>_<number>`

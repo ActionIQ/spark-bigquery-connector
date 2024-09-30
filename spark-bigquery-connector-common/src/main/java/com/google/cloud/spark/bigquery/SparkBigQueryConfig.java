@@ -397,7 +397,7 @@ public class SparkBigQueryConfig
     config.partitionExpirationMs =
         getOption(options, "partitionExpirationMs").transform(Long::valueOf).orNull();
     config.tableExpirationMs =
-            getOption(options, "tableExpirationMs").transform(Long::valueOf).orNull();
+        getOption(options, "tableExpirationMs").transform(Long::valueOf).orNull();
     config.partitionRequireFilter =
         getOption(options, "partitionRequireFilter").transform(Boolean::valueOf);
     config.clusteredFields = getOption(options, "clusteredFields").transform(s -> s.split(","));
@@ -744,9 +744,7 @@ public class SparkBigQueryConfig
   }
 
   public OptionalLong getTableExpirationMs() {
-    return tableExpirationMs == null
-            ? OptionalLong.empty()
-            : OptionalLong.of(tableExpirationMs);
+    return tableExpirationMs == null ? OptionalLong.empty() : OptionalLong.of(tableExpirationMs);
   }
 
   public Optional<Boolean> getPartitionRequireFilter() {
