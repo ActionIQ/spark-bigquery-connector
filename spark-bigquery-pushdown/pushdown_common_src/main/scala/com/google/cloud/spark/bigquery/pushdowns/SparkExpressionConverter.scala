@@ -555,6 +555,12 @@ abstract class SparkExpressionConverter {
            _: Upper | _: StringInstr | _: InitCap |
            _: Substring =>
         ConstantString(expression.prettyName.toUpperCase()) + blockStatement(convertStatements(fields, expression.children: _*))
+      case ConcatWs(children) if children.length > 1 && children.head.foldable =>
+        val separator = children.head.toString
+        val numExps = children.size - 1
+        val sepExpression = Seq.fill(numExps)("%s").mkString(separator)
+        val formatExps = Literal(sepExpression) +: children.tail
+        ConstantString("FORMAT") + blockStatement(convertStatements(fields, formatExps: _*))
       case _: Like =>
         convertLikeExpression(expression, fields)
       case RegExpExtract(child, Literal(pattern: UTF8String, StringType), idx) =>

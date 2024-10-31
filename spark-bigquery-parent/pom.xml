@@ -85,7 +85,7 @@
 
     <properties>
         <gpg.skip>true</gpg.skip>
-        <revision>0.30.0-aiq25</revision>
+        <revision>0.30.0-aiq26</revision>
 
         <avro.version>1.11.1</avro.version>
         <arrow.version>11.0.0</arrow.version>
@@ -128,7 +128,7 @@
         <!-- checkstyle
         <checkstyle.header.file>${reactor.project.basedir}/java.header</checkstyle.header.file>
         -->
-        <spark.version>3-3-2-aiq109</spark.version>
+        <spark.version>3-3-2-aiq116</spark.version>
         <scala.binary.version>2.12</scala.binary.version>
         <scala.patch.version>15</scala.patch.version>
     </properties>
