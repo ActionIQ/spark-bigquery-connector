@@ -1343,5 +1343,5 @@ TODO figure out acceptance test
 # Deploy
 To deploy to AIQ artifactory https://actioniq.jfrog.io/artifactory/aiq-sbt-local
 ```
-./mvnw deploy
+./mvnw deploy -DskipTests
 ```

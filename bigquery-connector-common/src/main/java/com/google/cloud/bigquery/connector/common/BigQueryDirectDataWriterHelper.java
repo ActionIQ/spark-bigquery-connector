@@ -154,7 +154,8 @@ public class BigQueryDirectDataWriterHelper {
    * @throws IOException If sendAppendRowsRequest fails.
    */
   public void addRow(ByteString message) throws IOException {
-    int messageSize = message.size();
+    // https://github.com/GoogleCloudDataproc/spark-bigquery-connector/issues/1116
+    int messageSize = message.size() + 2;
 
     if (appendRequestSizeBytes + messageSize > MAX_APPEND_ROWS_REQUEST_SIZE) {
       // If a single row exceeds the maximum size for an append request, this is a nonrecoverable
